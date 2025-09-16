@@ -1,7 +1,5 @@
-
-
 import { Tabs } from 'expo-router';
-import { ChartBar as BarChart3, Bell, Droplets, Map } from 'lucide-react-native';
+import { ChartBar as BarChart3, Bell, Droplets, Map, User } from 'lucide-react-native';
 import { Platform } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -95,6 +93,19 @@ export default function TabLayout() {
             title: 'Alerts',
             tabBarIcon: ({ color, focused }) => (
               <Bell 
+                size={focused ? 20 : 18} 
+                color={color} 
+                strokeWidth={focused ? 2 : 1.8}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="Profile"
+          options={{
+            title: 'Profile',
+            tabBarIcon: ({ color, focused }) => (
+              <User 
                 size={focused ? 20 : 18} 
                 color={color} 
                 strokeWidth={focused ? 2 : 1.8}
