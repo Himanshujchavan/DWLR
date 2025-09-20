@@ -1,5 +1,6 @@
-git clone <repository-url>
-﻿# 🌊 Real time Groundwater resource evaluation using DWLR data
+﻿
+# 🌊 Real time Groundwater resource evaluation using DWLR data
+
 
 A comprehensive groundwater monitoring and management mobile application for the **Department of Water and Land Resources**.  
 Built with **React Native and Expo**, this app provides **real-time monitoring, data visualization, and alerting capabilities** to strengthen groundwater management in India.  
@@ -93,7 +94,7 @@ This enables stakeholders to:
 ### Installation
 ```bash
 # Clone the repo
-
+git clone <repository-url>
 cd DWLR
 
 # Install dependencies
@@ -183,3 +184,6 @@ npm start
 ✨Prevents water scarcity risks and crop failures by enabling early intervention strategies and resource allocation.
 
 ✨Enables governments to mitigate "Day Zero" occurrences by lowering costs of water crisis interventions through efficient planning.
+
+
+
