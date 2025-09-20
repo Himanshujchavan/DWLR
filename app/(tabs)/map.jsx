@@ -1,8 +1,19 @@
 
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import MapView, { Callout, Circle, Marker, Polygon, PROVIDER_GOOGLE } from 'react-native-maps';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+
+// Conditional import to prevent native modules loading on web
+let MapView, Callout, Circle, Marker, Polygon, PROVIDER_GOOGLE;
+if (Platform.OS !== 'web') {
+  const maps = require('react-native-maps');
+  MapView = maps.default;
+  Callout = maps.Callout;
+  Circle = maps.Circle;
+  Marker = maps.Marker;
+  Polygon = maps.Polygon;
+  PROVIDER_GOOGLE = maps.PROVIDER_GOOGLE;
+}
 const makeStation = (id, name, lat, long, waterLevel, depth) => ({ id, name, lat, long, waterLevel, depth });
 
 // Enhanced DWLR Stations with regional distribution
@@ -194,7 +205,7 @@ const trendColor = (trend) => {
 
 // ------------------------------------------------------------
 // Component
-// ------------------------------------------------------------`
+// ------------------------------------------------------------
 const MapScreen = () => {
   // Layer visibility toggles
   // Only stations layer visible by default; others start hidden for clarity
@@ -481,6 +492,18 @@ const MapScreen = () => {
       </Marker>
     );
   }, [favorites, selectedStation, focusOnStation, toggleFavorite]);
+
+  // On web, show a simple fallback that explains native maps aren't supported
+  if (Platform.OS === 'web') {
+    return (
+      <View style={styles.webFallback}>
+        <Text style={styles.webFallbackTitle}>Map View</Text>
+        <Text style={styles.webFallbackText}>
+          Native maps are not supported on web. Please use the mobile app for the full map experience.
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -959,6 +982,28 @@ const InteractiveLegend = () => (
 // ------------------------------------------------------------
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
+  
+  // Web fallback styles
+  webFallback: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    padding: 40,
+  },
+  webFallbackTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1a237e',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  webFallbackText: {
+    fontSize: 16,
+    color: '#64748b',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
   
   // Enhanced callout styles
   callout: { 
