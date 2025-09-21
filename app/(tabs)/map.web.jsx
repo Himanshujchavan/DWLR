@@ -1,8 +1,8 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 const makeStation = (id, name, lat, long, waterLevel, depth) => ({ id, name, lat, long, waterLevel, depth });
 
