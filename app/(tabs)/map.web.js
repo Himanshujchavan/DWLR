@@ -168,14 +168,15 @@ const classifyTrend = (series) => {
 
 
 // Web-compatible map component using Leaflet
-const MapView = ({ style, initialRegion, showsUserLocation, children, stations, showRecharge, showAlerts, showBoundaries, showOutline, filteredAlerts, season }) => {
+const MapView = ({ style, initialRegion, stations, showRecharge, showAlerts, showBoundaries, showOutline, filteredAlerts, season }) => {
   const [map, setMap] = useState(null);
   const [mapContainer, setMapContainer] = useState(null);
+  const [leafletError, setLeafletError] = useState(null);
 
   useEffect(() => {
     // Dynamically import Leaflet only on web
     if (typeof window !== 'undefined') {
-      import('leaflet').then((L) => {
+  import('leaflet').then((L) => {
         // Import Leaflet CSS
         if (!document.querySelector('link[href*="leaflet.css"]')) {
           const link = document.createElement('link');
@@ -306,6 +307,9 @@ const MapView = ({ style, initialRegion, showsUserLocation, children, stations, 
 
           setMap(leafletMap);
         }
+      }).catch(e => {
+        console.error('Leaflet load error', e);
+        setLeafletError(e?.message || 'Failed to load map library');
       });
     }
 
@@ -316,16 +320,15 @@ const MapView = ({ style, initialRegion, showsUserLocation, children, stations, 
     };
   }, [mapContainer, map, initialRegion, stations, showRecharge, showAlerts, showBoundaries, showOutline, filteredAlerts, season]);
 
-  return (
-    <div 
-      ref={setMapContainer} 
-      style={{ 
-        width: '100%', 
-        height: '100%',
-        minHeight: '400px'
-      }} 
-    />
-  );
+  if (leafletError) {
+    return (
+      <View style={styles.leafletErrorContainer}>
+        <Text style={styles.leafletErrorTitle}>Map Unavailable</Text>
+        <Text style={styles.leafletErrorText}>{leafletError}</Text>
+      </View>
+    );
+  }
+  return <View ref={setMapContainer} style={styles.leafletContainer} />;
 };
 
 // Web-compatible marker component (markers are handled in MapView component above)
@@ -447,24 +450,16 @@ export default function MapScreen() {
 
       {/* Filter Pills */}
       <View style={styles.filterContainer}>
-        {filterOptions.map((filter) => (
-          <View
+        {filterOptions.map(filter => (
+          <Pressable
             key={filter.key}
-            style={[
-              styles.filterPill,
-              { backgroundColor: selectedFilter === filter.key ? filter.color : '#f1f5f9' },
-            ]}
+            style={[styles.filterPill, { backgroundColor: selectedFilter === filter.key ? filter.color : '#f1f5f9' }]}
             onPress={() => setSelectedFilter(filter.key)}
           >
-            <Text
-              style={[
-                styles.filterText,
-                { color: selectedFilter === filter.key ? '#ffffff' : '#64748b' },
-              ]}
-            >
+            <Text style={[styles.filterText, { color: selectedFilter === filter.key ? '#ffffff' : '#64748b' }]}>
               {filter.label} ({filter.count})
             </Text>
-          </View>
+          </Pressable>
         ))}
       </View>
 
@@ -473,42 +468,16 @@ export default function MapScreen() {
         {/* Quick Action Bar */}
         <View style={styles.quickActionBar}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickActionContent}>
-            <Pressable 
-              style={[styles.actionButton, showFilterPanel && styles.actionButtonActive]}
-              onPress={() => setShowFilterPanel(!showFilterPanel)}
-            >
-              <Ionicons 
-                name="filter" 
-                size={16} 
-                color={showFilterPanel ? "#fff" : "#333"} 
-                style={styles.actionIcon}
-              />
+            <Pressable style={[styles.actionButton, showFilterPanel && styles.actionButtonActive]} onPress={() => setShowFilterPanel(!showFilterPanel)}>
+              <Ionicons name="filter" size={16} color={showFilterPanel ? '#fff' : '#333'} style={styles.actionIcon} />
               <Text style={[styles.actionButtonText, showFilterPanel && styles.actionButtonTextActive]}>Filters</Text>
             </Pressable>
-            
-            <Pressable 
-              style={[styles.actionButton, showLegend && styles.actionButtonActive]}
-              onPress={() => setShowLegend(!showLegend)}
-            >
-              <MaterialIcons 
-                name="legend-toggle" 
-                size={16} 
-                color={showLegend ? "#fff" : "#333"} 
-                style={styles.actionIcon}
-              />
+            <Pressable style={[styles.actionButton, showLegend && styles.actionButtonActive]} onPress={() => setShowLegend(!showLegend)}>
+              <MaterialIcons name="legend-toggle" size={16} color={showLegend ? '#fff' : '#333'} style={styles.actionIcon} />
               <Text style={[styles.actionButtonText, showLegend && styles.actionButtonTextActive]}>Legend</Text>
             </Pressable>
-            
-            <Pressable 
-              style={styles.actionButton}
-              onPress={() => setRealTimeOn(!realTimeOn)}
-            >
-              <Ionicons 
-                name={realTimeOn ? "pause" : "play"} 
-                size={16} 
-                color="#333" 
-                style={styles.actionIcon}
-              />
+            <Pressable style={styles.actionButton} onPress={() => setRealTimeOn(!realTimeOn)}>
+              <Ionicons name={realTimeOn ? 'pause' : 'play'} size={16} color="#333" style={styles.actionIcon} />
               <Text style={styles.actionButtonText}>{realTimeOn ? 'Pause' : 'Resume'}</Text>
             </Pressable>
           </ScrollView>
@@ -697,6 +666,27 @@ const InteractiveLegend = () => (
 );
 
 const styles = StyleSheet.create({
+  leafletContainer: {
+    width: '100%',
+    height: '100%',
+    minHeight: 400,
+  },
+  leafletErrorContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  leafletErrorTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  leafletErrorText: {
+    fontSize: 14,
+    color: '#555',
+    textAlign: 'center'
+  },
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
@@ -804,17 +794,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   actionButton: {
+    display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 10,
+    paddingLeft: 14,
+    paddingRight: 14,
     borderRadius: 18,
     marginRight: 8,
     backgroundColor: '#f8f9fa',
     justifyContent: 'center',
     minHeight: 40,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
+    border: '1px solid #e9ecef',
+    cursor: 'pointer',
   },
   actionButtonActive: {
     backgroundColor: '#0d6efd',
@@ -900,23 +893,23 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   toggle: { 
-    paddingHorizontal: 12, 
-    paddingVertical: 6, 
+    display: 'flex',
+    paddingLeft: 12,
+    paddingRight: 12,
+    paddingTop: 6,
+    paddingBottom: 6,
     borderRadius: 18, 
-    borderWidth: 1,
+    border: '1px solid',
     marginBottom: 6,
     minWidth: 75,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+    cursor: 'pointer',
   },
   toggleOn: { 
     backgroundColor: '#007bff', 
     borderColor: '#007bff',
-    transform: [{ scale: 0.98 }],
+    transform: 'scale(0.98)',
   },
   toggleOff: { 
     backgroundColor: '#ffffff', 
@@ -940,24 +933,23 @@ const styles = StyleSheet.create({
     borderColor: '#e9ecef',
   },
   filterChip: { 
+    display: 'flex',
     flex: 1,
-    paddingVertical: 8, 
+    paddingTop: 8,
+    paddingBottom: 8,
     borderRadius: 8, 
     backgroundColor: '#ffffff', 
-    marginHorizontal: 3,
+    marginLeft: 3,
+    marginRight: 3,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#dee2e6',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+    border: '1px solid #dee2e6',
+    cursor: 'pointer',
   },
   filterChipActive: { 
     backgroundColor: '#007bff',
     borderColor: '#007bff',
-    transform: [{ scale: 0.98 }],
+    transform: 'scale(0.98)',
   },
   filterChipText: { 
     fontSize: 11, 
@@ -980,24 +972,23 @@ const styles = StyleSheet.create({
     borderColor: '#e9ecef',
   },
   seasonChip: { 
+    display: 'flex',
     flex: 1,
-    paddingVertical: 6, 
+    paddingTop: 6,
+    paddingBottom: 6,
     borderRadius: 8, 
     backgroundColor: '#ffffff', 
-    marginHorizontal: 2,
+    marginLeft: 2,
+    marginRight: 2,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#dee2e6',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+    border: '1px solid #dee2e6',
+    cursor: 'pointer',
   },
   seasonChipActive: { 
     backgroundColor: '#17a2b8',
     borderColor: '#17a2b8',
-    transform: [{ scale: 0.98 }],
+    transform: 'scale(0.98)',
   },
   seasonChipText: { 
     fontSize: 10, 
