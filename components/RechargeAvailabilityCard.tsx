@@ -1,5 +1,7 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
@@ -24,6 +26,21 @@ interface RechargeData {
 
 const RechargeAvailabilityCard: React.FC = () => {
   const [showAll, setShowAll] = useState(false);
+  const colorScheme = useColorScheme();
+
+  const colors = {
+    cardBackground: colorScheme === 'light' ? Colors.light.cardBackground : '#16213e',
+    cardBorder: colorScheme === 'light' ? Colors.light.cardBorder : 'rgba(255,255,255,0.1)',
+    text: colorScheme === 'light' ? Colors.light.text : '#ffffff',
+    textSecondary: colorScheme === 'light' ? Colors.light.textSecondary : 'rgba(255,255,255,0.7)',
+    textMuted: colorScheme === 'light' ? Colors.light.textSecondary : 'rgba(255,255,255,0.6)',
+    primary: colorScheme === 'light' ? Colors.light.secondary : '#22d3ee',
+    rowBackground: colorScheme === 'light' ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.05)',
+    buttonBackground: colorScheme === 'light' ? Colors.light.secondary + '10' : 'rgba(34, 211, 238, 0.1)',
+    buttonBorder: colorScheme === 'light' ? Colors.light.secondary + '30' : '#22d3ee30',
+    iconBackground: colorScheme === 'light' ? Colors.light.secondary + '15' : '#22d3ee15',
+    borderColor: colorScheme === 'light' ? Colors.light.cardBorder : 'rgba(255,255,255,0.1)',
+  };
 
   // Sample recharge data for last 15 days
   const rechargeData: RechargeData[] = [
@@ -60,40 +77,55 @@ const RechargeAvailabilityCard: React.FC = () => {
   const displayData = showAll ? rechargeData : rechargeData.slice(0, 8);
 
   return (
-    <View style={styles.cardShadow}>
-      <ThemedView style={styles.card}>
+    <View style={[
+      styles.cardShadow,
+      colorScheme === 'light' ? {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 3,
+      } : {}
+    ]}>
+      <ThemedView style={[styles.card, {
+        backgroundColor: colors.cardBackground,
+        borderColor: colors.cardBorder,
+      }]}>
         {/* Header */}
         <View style={styles.cardHeader}>
-          <View style={[styles.iconContainer, { backgroundColor: '#22d3ee15' }]}>
-            <MaterialCommunityIcons name="water-plus" size={24} color="#22d3ee" />
+          <View style={[styles.iconContainer, { backgroundColor: colors.iconBackground }]}>
+            <MaterialCommunityIcons name="water-plus" size={24} color={colors.primary} />
           </View>
-          <ThemedText style={styles.cardTitle}>Recharge & Availability</ThemedText>
+          <ThemedText style={[styles.cardTitle, { color: colors.text }]}>Recharge & Availability</ThemedText>
         </View>
-        <ThemedText style={styles.cardSubtitle}>
+        <ThemedText style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
           Last {rechargeData.length} days recharge data
         </ThemedText>
 
         {/* Recharge Data List */}
         <View style={styles.rechargeList}>
           {displayData.map((item, index) => (
-            <View key={index} style={styles.rechargeRow}>
+            <View key={index} style={[styles.rechargeRow, {
+              backgroundColor: colors.rowBackground,
+              borderLeftColor: colors.primary,
+            }]}>
               <View style={styles.dateSection}>
-                <View style={styles.rechargeIcon}>
+                <View style={[styles.rechargeIcon, { backgroundColor: colors.iconBackground }]}>
                   <MaterialCommunityIcons 
                     name="water" 
                     size={16} 
-                    color="#22d3ee" 
+                    color={colors.primary} 
                   />
                 </View>
-                <ThemedText style={styles.dateLabel}>
+                <ThemedText style={[styles.dateLabel, { color: colors.textSecondary }]}>
                   {formatDate(item.date)}
                 </ThemedText>
               </View>
               <View style={styles.rechargeValue}>
-                <ThemedText style={[styles.valueText, { color: '#22d3ee' }]}>
+                <ThemedText style={[styles.valueText, { color: colors.primary }]}>
                   {item.recharge}
                 </ThemedText>
-                <ThemedText style={styles.unitText}>{item.unit}</ThemedText>
+                <ThemedText style={[styles.unitText, { color: colors.textMuted }]}>{item.unit}</ThemedText>
               </View>
             </View>
           ))}
@@ -101,17 +133,20 @@ const RechargeAvailabilityCard: React.FC = () => {
 
         {/* View More/Less Button */}
         <TouchableOpacity 
-          style={styles.viewMoreButton} 
+          style={[styles.viewMoreButton, {
+            backgroundColor: colors.buttonBackground,
+            borderColor: colors.buttonBorder,
+          }]} 
           onPress={handleToggleView}
           activeOpacity={0.7}
         >
-          <ThemedText style={styles.viewMoreText}>
+          <ThemedText style={[styles.viewMoreText, { color: colors.primary }]}>
             {showAll ? 'View Less' : 'View More'}
           </ThemedText>
           <MaterialCommunityIcons 
             name={showAll ? 'chevron-up' : 'chevron-down'} 
             size={20} 
-            color="#22d3ee" 
+            color={colors.primary} 
           />
         </TouchableOpacity>
 
@@ -123,21 +158,11 @@ const RechargeAvailabilityCard: React.FC = () => {
 const styles = StyleSheet.create({
   cardShadow: {
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
   card: {
-    backgroundColor: '#16213e',
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -155,12 +180,10 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#ffffff',
     flex: 1,
   },
   cardSubtitle: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.7)',
     marginBottom: 20,
   },
   rechargeList: {
@@ -172,11 +195,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 8,
     marginBottom: 8,
     borderLeftWidth: 3,
-    borderLeftColor: '#22d3ee',
   },
   dateSection: {
     flexDirection: 'row',
@@ -186,14 +207,12 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: 'rgba(34, 211, 238, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
   },
   dateLabel: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
     fontWeight: '500',
   },
   rechargeValue: {
@@ -206,7 +225,6 @@ const styles = StyleSheet.create({
   },
   unitText: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
     marginLeft: 4,
   },
   viewMoreButton: {
@@ -215,14 +233,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: 'rgba(34, 211, 238, 0.1)',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#22d3ee30',
     marginBottom: 20,
   },
   viewMoreText: {
-    color: '#22d3ee',
     fontSize: 14,
     fontWeight: '600',
     marginRight: 8,

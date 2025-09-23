@@ -1,4 +1,5 @@
 
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -207,6 +208,8 @@ const trendColor = (trend) => {
 // Component
 // ------------------------------------------------------------
 const MapScreen = () => {
+  const colorScheme = useColorScheme();
+  
   // Layer visibility toggles
   // Only stations layer visible by default; others start hidden for clarity
   const [showStations, setShowStations] = useState(true);

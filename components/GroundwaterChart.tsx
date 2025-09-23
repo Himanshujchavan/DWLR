@@ -1,3 +1,4 @@
+import { Colors } from '@/constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -28,15 +29,42 @@ export default function GroundwaterChart({ variant = 'light' }: { variant?: Vari
 
   const isDark = variant === 'dark';
 
+  const colors = {
+    background: isDark ? 'transparent' : Colors.light.cardBackground,
+    text: isDark ? '#ffffff' : Colors.light.text,
+    textSecondary: isDark ? 'rgba(255,255,255,0.8)' : Colors.light.textSecondary,
+    textMuted: isDark ? 'rgba(255,255,255,0.7)' : Colors.light.textSecondary,
+    primary: isDark ? '#64b5f6' : Colors.light.primary,
+    primaryDark: isDark ? '#1e88e5' : '#2980b9',
+    success: isDark ? '#34d399' : Colors.light.statusHigh,
+    border: isDark ? 'rgba(255,255,255,0.2)' : Colors.light.cardBorder,
+  };
+
   return (
-    <View style={[styles.container, isDark && styles.containerDark]}>
+    <View style={[
+      styles.container, 
+      { 
+        backgroundColor: colors.background,
+        ...(isDark ? {
+          padding: 0,
+          shadowOpacity: 0,
+          elevation: 0,
+        } : {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 4,
+        })
+      }
+    ]}>
       <View style={styles.chartHeader}>
-        <Text style={[styles.chartTitle, isDark && styles.chartTitleDark]}>Daily Groundwater Levels</Text>
+        <Text style={[styles.chartTitle, { color: colors.text }]}>Daily Groundwater Levels</Text>
         <View style={styles.headerStats}>
-          <Text style={[styles.totalRainfall, isDark && styles.totalRainfallDark]}>
+          <Text style={[styles.totalRainfall, { color: colors.primary }]}>
             Recent Rain: {mockData.reduce((sum, data) => sum + data.rainfall, 0)}mm
           </Text>
-          <Text style={[styles.deviation, isDark && styles.deviationDark]}>
+          <Text style={[styles.deviation, { color: colors.success }]}>
             Trend: {((mockData[mockData.length - 1].level - mockData[0].level)).toFixed(1)}m
           </Text>
         </View>
@@ -44,9 +72,9 @@ export default function GroundwaterChart({ variant = 'light' }: { variant?: Vari
       
       <View style={styles.chartContainer}>
         <View style={styles.yAxis}>
-          <Text style={[styles.yLabel, isDark && styles.yLabelDark]}>{maxLevel.toFixed(1)}m</Text>
-          <Text style={[styles.yLabel, isDark && styles.yLabelDark]}>{((maxLevel + minLevel) / 2).toFixed(1)}m</Text>
-          <Text style={[styles.yLabel, isDark && styles.yLabelDark]}>{minLevel.toFixed(1)}m</Text>
+          <Text style={[styles.yLabel, { color: colors.textSecondary }]}>{maxLevel.toFixed(1)}m</Text>
+          <Text style={[styles.yLabel, { color: colors.textSecondary }]}>{((maxLevel + minLevel) / 2).toFixed(1)}m</Text>
+          <Text style={[styles.yLabel, { color: colors.textSecondary }]}>{minLevel.toFixed(1)}m</Text>
         </View>
         
         <View style={styles.chart}>
@@ -55,7 +83,7 @@ export default function GroundwaterChart({ variant = 'light' }: { variant?: Vari
             // Determine if this day shows an improvement from the previous day
             const isImproving = index > 0 && data.level > mockData[index - 1].level;
             const gradientColors = isImproving 
-              ? (isDark ? ['#64b5f6', '#1e88e5'] as const : ['#3498db', '#2980b9'] as const)
+              ? [colors.primary, colors.primaryDark] as const
               : ['#f59e0b', '#d97706'] as const;
             
             return (
@@ -66,27 +94,27 @@ export default function GroundwaterChart({ variant = 'light' }: { variant?: Vari
                     style={[styles.actualBar, { height: Math.max(height, 5) }]}
                   />
                 </View>
-                <Text style={[styles.monthLabel, isDark && styles.monthLabelDark]}>{data.date.split(' ')[1]}</Text>
+                <Text style={[styles.monthLabel, { color: colors.textMuted }]}>{data.date.split(' ')[1]}</Text>
               </View>
             );
           })}
         </View>
       </View>
       
-      <View style={[styles.legend, isDark && styles.legendDark]}>
+      <View style={[styles.legend, { borderTopColor: colors.border }]}>
         <View style={styles.legendItem}>
           <LinearGradient
-            colors={isDark ? ['#64b5f6', '#1e88e5'] as const : ['#3498db', '#2980b9'] as const}
+            colors={[colors.primary, colors.primaryDark] as const}
             style={styles.legendColor}
           />
-          <Text style={[styles.legendText, isDark && styles.legendTextDark]}>Rising Level</Text>
+          <Text style={[styles.legendText, { color: colors.text }]}>Rising Level</Text>
         </View>
         <View style={styles.legendItem}>
           <LinearGradient
             colors={['#f59e0b', '#d97706'] as const}
             style={styles.legendColor}
           />
-          <Text style={[styles.legendText, isDark && styles.legendTextDark]}>Falling Level</Text>
+          <Text style={[styles.legendText, { color: colors.text }]}>Falling Level</Text>
         </View>
       </View>
     </View>
@@ -95,20 +123,8 @@ export default function GroundwaterChart({ variant = 'light' }: { variant?: Vari
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  containerDark: {
-    backgroundColor: 'transparent',
-    padding: 0,
-    shadowOpacity: 0,
-    elevation: 0,
   },
   chartHeader: {
     marginBottom: 16,
@@ -116,11 +132,7 @@ const styles = StyleSheet.create({
   chartTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2c3e50',
     marginBottom: 8,
-  },
-  chartTitleDark: {
-    color: '#ffffff',
   },
   headerStats: {
     flexDirection: 'row',
@@ -129,19 +141,11 @@ const styles = StyleSheet.create({
   },
   totalRainfall: {
     fontSize: 14,
-    color: '#3498db',
     fontWeight: '600',
-  },
-  totalRainfallDark: {
-    color: '#64b5f6',
   },
   deviation: {
     fontSize: 12,
-    color: '#27ae60',
     fontWeight: '500',
-  },
-  deviationDark: {
-    color: '#34d399',
   },
   chartContainer: {
     flexDirection: 'row',
@@ -154,28 +158,25 @@ const styles = StyleSheet.create({
   },
   yLabel: {
     fontSize: 12,
-    color: '#7f8c8d',
     textAlign: 'right',
-  },
-  yLabelDark: {
-    color: 'rgba(255,255,255,0.8)',
   },
   chart: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    paddingHorizontal: 2,
+    justifyContent: 'space-around',
+    paddingHorizontal: 4,
   },
   barGroup: {
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
+    minWidth: 18,
   },
   bars: {
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
+    width: 12,
   },
   actualBar: {
     width: 10,
@@ -190,16 +191,11 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: '#bdc3c7',
   },
-  normalBarDark: {
-    backgroundColor: 'rgba(255,255,255,0.4)',
-  },
   monthLabel: {
     fontSize: 9,
-    color: '#7f8c8d',
     textAlign: 'center',
-  },
-  monthLabelDark: {
-    color: 'rgba(255,255,255,0.7)',
+    width: 18,
+    marginTop: 4,
   },
   legend: {
     flexDirection: 'row',
@@ -207,10 +203,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#ecf0f1',
-  },
-  legendDark: {
-    borderTopColor: 'rgba(255,255,255,0.2)',
   },
   legendItem: {
     flexDirection: 'row',
@@ -224,9 +216,5 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 12,
-    color: '#2c3e50',
-  },
-  legendTextDark: {
-    color: '#ffffff',
   },
 });

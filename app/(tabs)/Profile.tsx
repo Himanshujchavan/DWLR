@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import { Image, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import AppNavbar from '@/components/AppNavbar';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const TABS = ['Overview', 'Saved Data', 'Settings'] as const;
 
@@ -14,11 +14,10 @@ type TabKey = typeof TABS[number];
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabKey>('Overview');
+  const { colorScheme, userPreference, setUserPreference } = useTheme();
 
   return (
     <View style={styles.container}>
-      <AppNavbar />
-      
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: Platform.OS === 'android' ? 100 + insets.bottom : 100 }}
@@ -211,10 +210,32 @@ export default function ProfileScreen() {
                   </TouchableOpacity>
                 </View>
                 <View style={[styles.dataRow, {borderBottomWidth: 0}]}>
-                  <ThemedText style={styles.dataLabel}>Dark Mode</ThemedText>
-                  <TouchableOpacity style={[styles.switchPill, { backgroundColor: 'rgba(255,255,255,0.12)' }]}>
-                    <View style={[styles.switchDot, { left: 2, backgroundColor: '#9ca3af' }]} />
-                    <ThemedText style={styles.switchText}>Off</ThemedText>
+                  <View>
+                    <ThemedText style={styles.dataLabel}>Theme</ThemedText>
+                    <ThemedText style={[styles.dataLabel, { fontSize: 12, opacity: 0.7, marginTop: 2 }]}>
+                      Current: {userPreference === 'system' ? `System (${colorScheme})` : userPreference}
+                    </ThemedText>
+                  </View>
+                  <TouchableOpacity 
+                    style={[
+                      styles.switchPill, 
+                      { backgroundColor: colorScheme === 'dark' ? '#64b5f6' : 'rgba(255,255,255,0.12)' }
+                    ]}
+                    onPress={() => {
+                      const newPreference = colorScheme === 'dark' ? 'light' : 'dark';
+                      setUserPreference(newPreference);
+                    }}
+                  >
+                    <View style={[
+                      styles.switchDot, 
+                      { 
+                        left: colorScheme === 'dark' ? 18 : 2, 
+                        backgroundColor: colorScheme === 'dark' ? '#ffffff' : '#9ca3af' 
+                      }
+                    ]} />
+                    <ThemedText style={styles.switchText}>
+                      {colorScheme === 'dark' ? 'Dark' : 'Light'}
+                    </ThemedText>
                   </TouchableOpacity>
                 </View>
               </ThemedView>
@@ -373,11 +394,10 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   card: {
-    backgroundColor: '#16213e',
-    borderRadius: 16,
-    padding: 20,
+    // Dynamic styling applied inline based on theme
+    borderRadius: 20,
+    padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
   cardHeaderRow: {
     flexDirection: 'row',

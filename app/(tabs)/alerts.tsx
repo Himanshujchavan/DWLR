@@ -2,9 +2,10 @@ import { AlertTriangle, Bell, Info, Shield, Zap } from 'lucide-react-native';
 import React, { useEffect, useRef } from 'react';
 import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import AppNavbar from '@/components/AppNavbar';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 const alertsData = [
   {
@@ -55,6 +56,7 @@ const alertsData = [
 ];
 
 export default function AlertsScreen() {
+  const colorScheme = useColorScheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
 
@@ -75,9 +77,6 @@ export default function AlertsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Navigation Bar */}
-      <AppNavbar />
-      
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Hero Section */}
         <View style={styles.hero}>
@@ -101,6 +100,7 @@ export default function AlertsScreen() {
 }
 
 function AlertCard({ alert, index }: { alert: any; index: number }) {
+  const colorScheme = useColorScheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -144,18 +144,24 @@ function AlertCard({ alert, index }: { alert: any; index: number }) {
   }, [alert.type, index, fadeAnim, scaleAnim, pulseAnim]);
 
   const getAlertConfig = (type: string) => {
-    switch (type) {
-      case 'critical':
-        return { color: '#ef4444', bgColor: '#ef444415', borderColor: '#ef444430' };
-      case 'warning':
-        return { color: '#f59e0b', bgColor: '#f59e0b15', borderColor: '#f59e0b30' };
-      case 'weather':
-        return { color: '#8b5cf6', bgColor: '#8b5cf615', borderColor: '#8b5cf630' };
-      case 'info':
-        return { color: '#06b6d4', bgColor: '#06b6d415', borderColor: '#06b6d430' };
-      default:
-        return { color: '#64b5f6', bgColor: '#64b5f615', borderColor: '#64b5f630' };
-    }
+    const lightColors = {
+      critical: { color: Colors.light.statusLow, bgColor: Colors.light.statusLow + '15', borderColor: Colors.light.statusLow + '30' },
+      warning: { color: Colors.light.statusMedium, bgColor: Colors.light.statusMedium + '15', borderColor: Colors.light.statusMedium + '30' },
+      weather: { color: '#8b5cf6', bgColor: '#8b5cf615', borderColor: '#8b5cf630' },
+      info: { color: Colors.light.secondary, bgColor: Colors.light.secondary + '15', borderColor: Colors.light.secondary + '30' },
+      default: { color: Colors.light.primary, bgColor: Colors.light.primary + '15', borderColor: Colors.light.primary + '30' }
+    };
+    
+    const darkColors = {
+      critical: { color: '#ef4444', bgColor: '#ef444415', borderColor: '#ef444430' },
+      warning: { color: '#f59e0b', bgColor: '#f59e0b15', borderColor: '#f59e0b30' },
+      weather: { color: '#8b5cf6', bgColor: '#8b5cf615', borderColor: '#8b5cf630' },
+      info: { color: '#06b6d4', bgColor: '#06b6d415', borderColor: '#06b6d430' },
+      default: { color: '#64b5f6', bgColor: '#64b5f615', borderColor: '#64b5f630' }
+    };
+
+    const colors = colorScheme === 'light' ? lightColors : darkColors;
+    return colors[type as keyof typeof colors] || colors.default;
   };
 
   const config = getAlertConfig(alert.type);
@@ -171,7 +177,13 @@ function AlertCard({ alert, index }: { alert: any; index: number }) {
         },
       ]}
     >
-      <ThemedView style={styles.card}>
+      <ThemedView style={[
+        styles.card,
+        {
+          backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : '#16213e',
+          borderColor: colorScheme === 'light' ? Colors.light.cardBorder : 'rgba(255,255,255,0.1)',
+        }
+      ]}>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: config.bgColor }]}>
             <Icon size={24} color={config.color} />
@@ -254,18 +266,17 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 8,
+    elevation: 3,
   },
   card: {
-    backgroundColor: '#16213e',
-    borderRadius: 16,
-    padding: 20,
+    // Dynamic styling applied inline based on theme
+    borderRadius: 20,
+    padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
   cardHeader: {
     flexDirection: 'row',

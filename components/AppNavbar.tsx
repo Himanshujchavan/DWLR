@@ -1,3 +1,5 @@
+import { Colors } from "@/constants/Colors";
+import { useTheme } from "@/contexts/ThemeContext";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -18,6 +20,17 @@ type Props = {
 export default function AppNavbar({ onSearch, stats }: Props) {
   useSafeAreaInsets();
   const router = useRouter();
+  const { colorScheme, toggleTheme } = useTheme();
+  
+  // Dynamic colors based on theme
+  const iconColor = colorScheme === 'light' ? Colors.light.primary : '#64b5f6';
+  const cardBg = colorScheme === 'light' ? Colors.light.backgroundSoft : 'rgba(255,255,255,0.15)';
+  const borderColor = colorScheme === 'light' ? Colors.light.cardBorder : 'rgba(255,255,255,0.3)';
+  const statusColors = {
+    low: colorScheme === 'light' ? Colors.light.statusLow : '#ff4444',
+    medium: colorScheme === 'light' ? Colors.light.statusMedium : '#ff8800', 
+    high: colorScheme === 'light' ? Colors.light.statusHigh : '#44aa44'
+  };
   
   return (
     <View style={[
@@ -34,21 +47,24 @@ export default function AppNavbar({ onSearch, stats }: Props) {
 
       {/* Statistics Panel */}
       {stats && (
-        <View style={styles.statsContainer}>
+        <View style={[styles.statsContainer, { 
+          backgroundColor: cardBg,
+          borderColor: borderColor 
+        }]}>
           <View style={styles.statItem}>
             <ThemedText style={styles.statValue}>{stats.filtered}</ThemedText>
             <ThemedText style={styles.statLabel}>VISIBLE</ThemedText>
           </View>
           <View style={styles.statItem}>
-            <ThemedText style={[styles.statValue, { color: '#ff4444' }]}>{stats.lowCount}</ThemedText>
+            <ThemedText style={[styles.statValue, { color: statusColors.low }]}>{stats.lowCount}</ThemedText>
             <ThemedText style={styles.statLabel}>LOW</ThemedText>
           </View>
           <View style={styles.statItem}>
-            <ThemedText style={[styles.statValue, { color: '#ff8800' }]}>{stats.moderateCount}</ThemedText>
+            <ThemedText style={[styles.statValue, { color: statusColors.medium }]}>{stats.moderateCount}</ThemedText>
             <ThemedText style={styles.statLabel}>MODERATE</ThemedText>
           </View>
           <View style={styles.statItem}>
-            <ThemedText style={[styles.statValue, { color: '#44aa44' }]}>{stats.highCount}</ThemedText>
+            <ThemedText style={[styles.statValue, { color: statusColors.high }]}>{stats.highCount}</ThemedText>
             <ThemedText style={styles.statLabel}>HIGH</ThemedText>
           </View>
         </View>
@@ -82,6 +98,21 @@ export default function AppNavbar({ onSearch, stats }: Props) {
         </TouchableOpacity>
 
           */} 
+        {/* Theme Toggle Icon */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={colorScheme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
+          style={styles.themeIcon}
+          onPress={toggleTheme}
+          hitSlop={10}
+        >
+          <FontAwesome5 
+            name={colorScheme === 'dark' ? "sun" : "moon"} 
+            size={20} 
+            color={iconColor} 
+          />
+        </Pressable>
+
         {/* Alerts Icon */}
         <Pressable
           accessibilityRole="button"
@@ -90,7 +121,7 @@ export default function AppNavbar({ onSearch, stats }: Props) {
           onPress={() => router.push('/(tabs)/alerts')}
           hitSlop={10}
         >
-          <FontAwesome5 name="bell" size={20} color="#64b5f6" />
+          <FontAwesome5 name="bell" size={20} color={iconColor} />
         </Pressable>
 
         {/* Profile Icon */}
@@ -101,7 +132,7 @@ export default function AppNavbar({ onSearch, stats }: Props) {
           hitSlop={10}
           onPress={() => router.push('/(tabs)/Profile')}
         >
-          <FontAwesome5 name="user-circle" size={28} color="#64b5f6" />
+          <FontAwesome5 name="user-circle" size={28} color={iconColor} />
         </Pressable>
       </View>
     </View>
@@ -118,6 +149,18 @@ const styles = StyleSheet.create({
     paddingBottom: 18,
     backgroundColor: "transparent",
     borderBottomWidth: 0,
+    // Add subtle shadow for light mode
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   header: {
     fontSize: 20,
@@ -150,6 +193,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     borderRadius: 12,
   },
+  themeIcon: {
+    marginRight: 12,
+  },
   alertIcon: {
     marginRight: 12,
   },
@@ -168,12 +214,22 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: "row",
-    backgroundColor: "rgba(255,255,255,0.15)",
-    borderRadius: 12,
-    padding: 8,
+    borderRadius: 16, // More rounded for modern look
+    padding: 10,
     marginHorizontal: 10,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
+    // Add subtle shadow for light mode
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   statItem: {
     flex: 1,

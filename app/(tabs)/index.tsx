@@ -1,166 +1,290 @@
-import AppNavbar from '@/components/AppNavbar';
 import GroundwaterChart from '@/components/GroundwaterChart';
 import RainfallChart from '@/components/RainfallChart';
 import RechargeAvailabilityCard from '@/components/RechargeAvailabilityCard';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import WaterLevelIcon from '@/components/WaterLevelIcon';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
 import { Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
   const setOffset = (section: string) => () => {
     // Placeholder for offset handling if needed
     console.log(`Setting offset for ${section}`);
   };
 
+  const colors = {
+    background: colorScheme === 'light' ? Colors.light.backgroundSoft : '#1a1a2e',
+    heroBackground: colorScheme === 'light' ? Colors.light.cardBackground : '#16213e',
+    text: colorScheme === 'light' ? Colors.light.text : '#ffffff',
+    textSecondary: colorScheme === 'light' ? Colors.light.textSecondary : 'rgba(255,255,255,0.7)',
+    primary: colorScheme === 'light' ? Colors.light.primary : '#64b5f6',
+    cardBackground: colorScheme === 'light' ? Colors.light.cardBackground : '#16213e',
+    cardBorder: colorScheme === 'light' ? Colors.light.cardBorder : 'rgba(255,255,255,0.1)',
+    pillBackground: colorScheme === 'light' ? Colors.light.statusMedium : '#f59e42',
+    pillText: colorScheme === 'light' ? '#ffffff' : '#ffffff',
+  };
+
   const parameterIcons = [
     { 
       icon: 'weather-rainy', 
-      color: '#3b82f6', 
-      bg: '#3b82f615',
+      color: colorScheme === 'light' ? Colors.light.primary : '#3b82f6', 
+      bg: colorScheme === 'light' ? Colors.light.primary + '15' : '#3b82f615',
       name: 'Rainfall'
     },
     { 
       icon: 'arrow-down', 
-      color: '#06b6d4', 
-      bg: '#06b6d415',
+      color: colorScheme === 'light' ? Colors.light.secondary : '#06b6d4', 
+      bg: colorScheme === 'light' ? Colors.light.secondary + '15' : '#06b6d415',
       name: 'Depth'
     },
     { 
       icon: 'layers', 
-      color: '#84cc16', 
-      bg: '#84cc1615',
+      color: colorScheme === 'light' ? Colors.light.statusHigh : '#84cc16', 
+      bg: colorScheme === 'light' ? Colors.light.statusHigh + '15' : '#84cc1615',
       name: 'Soil'
     },
     { 
       icon: 'water-pump', 
-      color: '#f59e0b', 
-      bg: '#f59e0b15',
+      color: colorScheme === 'light' ? Colors.light.statusMedium : '#f59e0b', 
+      bg: colorScheme === 'light' ? Colors.light.statusMedium + '15' : '#f59e0b15',
       name: 'Usage'
     },
   ];
 
-  return (
-    <View style={styles.container}>
-      {/* Navigation Bar */}
-      <AppNavbar />
-      
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          // Ensure content clears the Android tab bar
-          paddingBottom: (Platform.OS === 'android' ? 100 : 60) + insets.bottom,
-        }}
-        bounces={Platform.OS === 'ios'}
-      >
-        {/* Hero Section */}
-        <View style={styles.hero}>
-          <WaterLevelIcon size={90} isPositive={true} />
-          <ThemedText style={styles.heroValue}>7.8 M</ThemedText>
-          <ThemedText style={styles.heroLabel}>Water Level</ThemedText>
-          <ThemedText style={[styles.heroChange, {color: '#10b981'}]}>+0.3m (4.3%)</ThemedText>
-          <View style={styles.heroPill}>
-            <ThemedText style={styles.heroPillText}>Orange Alert for Thunderstorms</ThemedText>
-          </View>
+  const commonContent = (
+    <>
+      {/* Hero Section */}
+      <View style={[
+        styles.hero, 
+        { 
+          backgroundColor: colors.heroBackground,
+          borderColor: colors.cardBorder,
+          ...(colorScheme === 'light' ? {
+            borderWidth: 1,
+            borderRadius: 20,
+            marginHorizontal: 16,
+            marginBottom: 20,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 3,
+          } : {})
+        }
+      ]}>
+        <WaterLevelIcon size={90} isPositive={true} />
+        <ThemedText style={[styles.heroValue, { color: colors.text }]}>7.8 M</ThemedText>
+        <ThemedText style={[styles.heroLabel, { color: colors.textSecondary }]}>Water Level</ThemedText>
+        <ThemedText style={[styles.heroChange, {color: colorScheme === 'light' ? Colors.light.statusHigh : '#10b981'}]}>+0.3m (4.3%)</ThemedText>
+        <View style={[styles.heroPill, { 
+          backgroundColor: colors.pillBackground,
+          borderWidth: colorScheme === 'light' ? 1 : 0,
+          borderColor: colorScheme === 'light' ? colors.cardBorder : 'transparent'
+        }]}>
+          <ThemedText style={[styles.heroPillText, { color: colors.pillText }]}>Orange Alert for Thunderstorms</ThemedText>
         </View>
+      </View>
 
       {/* Main Content Cards */}
       <View style={styles.cardContainer}>
         {/* Core Groundwater Data */}
-        <View onLayout={setOffset('core')} style={styles.cardShadow}>
-          <ThemedView style={styles.card}> 
+        <View onLayout={setOffset('core')} style={[
+          styles.cardShadow,
+          colorScheme === 'light' ? {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 3,
+          } : {}
+        ]}>
+          <ThemedView style={[
+            styles.card,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.cardBorder,
+            }
+          ]}> 
             <View style={styles.cardHeader}>
-              <View style={[styles.iconContainer, {backgroundColor: '#2563eb15'}]}>
-                <Ionicons name="water" size={24} color="#2563eb" />
+              <View style={[styles.iconContainer, {
+                backgroundColor: colorScheme === 'light' ? Colors.light.primary + '15' : '#2563eb15'
+              }]}>
+                <Ionicons 
+                  name="water" 
+                  size={24} 
+                  color={colors.primary} 
+                />
               </View>
-              <ThemedText style={styles.cardTitle}> Groundwater Level</ThemedText>
+              <ThemedText style={[styles.cardTitle, { color: colors.text }]}>Groundwater Level</ThemedText>
             </View>
                    
-             
             <View style={styles.chartContainer}>
-              <GroundwaterChart variant="dark" />
+              <GroundwaterChart variant={colorScheme === 'light' ? 'light' : 'dark'} />
             </View>
           </ThemedView>
         </View>
-           <View onLayout={setOffset('recharge')}>
+
+        <View onLayout={setOffset('recharge')}>
           <RechargeAvailabilityCard />
         </View>
+
         {/* Rainfall & Climate */}
-        <View onLayout={setOffset('rainfall')} style={styles.cardShadow}>
-          <ThemedView style={styles.card}> 
+        <View onLayout={setOffset('rainfall')} style={[
+          styles.cardShadow,
+          colorScheme === 'light' ? {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 3,
+          } : {}
+        ]}>
+          <ThemedView style={[
+            styles.card,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.cardBorder,
+            }
+          ]}> 
             <View style={styles.cardHeader}>
-              <View style={[styles.iconContainer, {backgroundColor: '#f59e4215'}]}>
-                <MaterialCommunityIcons name="weather-partly-cloudy" size={24} color="#f59e42" />
+              <View style={[styles.iconContainer, {
+                backgroundColor: colorScheme === 'light' ? Colors.light.statusMedium + '15' : '#f59e4215'
+              }]}>
+                <MaterialCommunityIcons 
+                  name="weather-partly-cloudy" 
+                  size={24} 
+                  color={colorScheme === 'light' ? Colors.light.statusMedium : '#f59e42'} 
+                />
               </View>
-              <ThemedText style={styles.cardTitle}>Rainfall & Climate</ThemedText>
+              <ThemedText style={[styles.cardTitle, { color: colors.text }]}>Rainfall & Climate</ThemedText>
             </View>
-            <ThemedText style={styles.cardSubtitle}>Weather patterns and climate data</ThemedText>
+            <ThemedText style={[styles.cardSubtitle, { color: colors.textSecondary }]}>Weather patterns and climate data</ThemedText>
             
-            <View style={styles.dataRow}>
-              <ThemedText style={styles.dataLabel}>Today&apos;s Rainfall</ThemedText>
-              <ThemedText style={styles.dataValue}>22mm</ThemedText>
+            <View style={[styles.dataRow, { borderBottomColor: colors.cardBorder }]}>
+              <ThemedText style={[styles.dataLabel, { color: colors.textSecondary }]}>Today&apos;s Rainfall</ThemedText>
+              <ThemedText style={[styles.dataValue, { color: colors.text }]}>22mm</ThemedText>
             </View>
-            <View style={styles.dataRow}>
-              <ThemedText style={styles.dataLabel}>Humidity</ThemedText>
-              <ThemedText style={styles.dataValue}>48%</ThemedText>
+            <View style={[styles.dataRow, { borderBottomColor: colors.cardBorder }]}>
+              <ThemedText style={[styles.dataLabel, { color: colors.textSecondary }]}>Humidity</ThemedText>
+              <ThemedText style={[styles.dataValue, { color: colors.text }]}>48%</ThemedText>
             </View>
-            <View style={styles.dataRow}>
-              <ThemedText style={styles.dataLabel}>Temperature</ThemedText>
-              <ThemedText style={styles.dataValue}>32°C</ThemedText>
+            <View style={[styles.dataRow, { borderBottomColor: colors.cardBorder }]}>
+              <ThemedText style={[styles.dataLabel, { color: colors.textSecondary }]}>Temperature</ThemedText>
+              <ThemedText style={[styles.dataValue, { color: colors.text }]}>32°C</ThemedText>
             </View>
 
             <View style={styles.chartContainer}>
-              <RainfallChart variant="dark" />
+              <RainfallChart variant={colorScheme === 'light' ? 'light' : 'dark'} />
             </View>
           </ThemedView>
         </View>
-        {/* Enhanced Recharge & Availability Card */}
-       
 
         {/* Parameter Icons Section */}
-        <View onLayout={setOffset('parameters')} style={styles.cardShadow}>
-          <ThemedView style={styles.card}>
+        <View onLayout={setOffset('parameters')} style={[
+          styles.cardShadow,
+          colorScheme === 'light' ? {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 3,
+          } : {}
+        ]}>
+          <ThemedView style={[
+            styles.card,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.cardBorder,
+            }
+          ]}>
             <View style={styles.cardHeader}>
-              <View style={[styles.iconContainer, { backgroundColor: '#8b5cf615' }]}>
+              <View style={[styles.iconContainer, { 
+                backgroundColor: colorScheme === 'light' ? '#8b5cf615' : '#8b5cf615' 
+              }]}>
                 <MaterialCommunityIcons name="view-dashboard" size={24} color="#8b5cf6" />
               </View>
-              <ThemedText style={styles.cardTitle}>Parameters</ThemedText>
+              <ThemedText style={[styles.cardTitle, { color: colors.text }]}>Parameters</ThemedText>
             </View>
-            <ThemedText style={styles.cardSubtitle}>Key monitoring parameters</ThemedText>
+            <ThemedText style={[styles.cardSubtitle, { color: colors.textSecondary }]}>Key monitoring parameters</ThemedText>
             
             <View style={styles.parameterRowInline}>
               {parameterIcons.map((param, index) => (
                 <TouchableOpacity
                   key={index}
-                  style={styles.parameterInlineItem}
+                  style={[styles.parameterInlineItem, {
+                    backgroundColor: colorScheme === 'light' ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.05)',
+                    borderColor: colors.cardBorder,
+                  }]}
                   activeOpacity={0.7}
                 >
-                  <View style={[styles.parameterInlineIcon, { backgroundColor: param.bg }]}>
+                  <View style={[styles.parameterInlineIcon, { 
+                    backgroundColor: param.bg,
+                    borderColor: colors.cardBorder,
+                  }]}>
                     <MaterialCommunityIcons
                       name={param.icon as any}
                       size={22}
                       color={param.color}
                     />
                   </View>
-                  <ThemedText style={styles.parameterInlineName}>{param.name}</ThemedText>
+                  <ThemedText style={[styles.parameterInlineName, { color: colors.text }]}>{param.name}</ThemedText>
                 </TouchableOpacity>
               ))}
             </View>
           </ThemedView>
         </View>
       </View>
-      </ScrollView>
-    </View>
+    </>
+  );
+
+  return (
+    <>
+      {colorScheme === 'light' ? (
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingBottom: (Platform.OS === 'android' ? 100 : 60) + insets.bottom,
+            }}
+            bounces={Platform.OS === 'ios'}
+          >
+            {commonContent}
+          </ScrollView>
+        </View>
+      ) : (
+        <LinearGradient
+          colors={['#1a1a2e', '#16213e', '#0f172a']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.container}
+        >
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingBottom: (Platform.OS === 'android' ? 100 : 60) + insets.bottom,
+            }}
+            bounces={Platform.OS === 'ios'}
+          >
+            {commonContent}
+          </ScrollView>
+        </LinearGradient>
+      )}
+
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
   },
   hero: {
     alignItems: 'center',
@@ -173,14 +297,12 @@ const styles = StyleSheet.create({
   heroValue: {
     fontSize: 48,
     fontWeight: 'bold',
-    color: '#ffffff',
     marginBottom: 8,
     textAlign: 'center',
     lineHeight: 56,
   },
   heroLabel: {
     fontSize: 18,
-    color: 'rgba(255,255,255,0.8)',
     marginBottom: 12,
   },
   heroChange: {
@@ -205,21 +327,11 @@ const styles = StyleSheet.create({
   },
   cardShadow: {
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
   card: {
-    backgroundColor: '#16213e',
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 20,
+    padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -237,12 +349,10 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#ffffff',
     flex: 1,
   },
   cardSubtitle: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.7)',
     marginBottom: 20,
   },
   dataRow: {
@@ -251,16 +361,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   dataLabel: {
     fontSize: 16,
-    color: 'rgba(255,255,255,0.8)',
   },
   dataValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
   },
   chartContainer: {
     marginTop: 20,
@@ -276,12 +383,10 @@ const styles = StyleSheet.create({
   parameterInlineItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
     width: '48%',
     marginBottom: 10,
   },
@@ -293,12 +398,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
   parameterInlineName: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#ffffff',
     textTransform: 'capitalize',
   },
 });
