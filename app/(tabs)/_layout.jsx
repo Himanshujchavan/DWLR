@@ -12,62 +12,70 @@ function CustomHeader() {
   const router = useRouter();
   const { colorScheme, toggleTheme } = useTheme();
   
-  // Dynamic colors based on theme
-  const iconColor = colorScheme === 'light' ? Colors.light.primary : '#64b5f6';
-  const headerBg = colorScheme === 'light' ? Colors.light.background : '#1a237e';
-  const textColor = colorScheme === 'light' ? Colors.light.text : '#ffffff';
+  // Clean, minimal colors inspired by Expo Go header
+  const iconColor = colorScheme === 'light' ? Colors.light.textSecondary : '#9BA1A6';
+  const headerBg = colorScheme === 'light' ? Colors.light.background : '#151718';
+  const textColor = colorScheme === 'light' ? Colors.light.text : '#ECEDEE';
+  const activeIconColor = colorScheme === 'light' ? Colors.light.primary : '#64b5f6';
   
   return (
     <View style={[
       styles.headerContainer,
       { 
         backgroundColor: headerBg,
-        borderBottomColor: colorScheme === 'light' ? Colors.light.cardBorder : 'rgba(255,255,255,0.1)'
+        borderBottomColor: colorScheme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)'
       }
     ]}>
       <View style={styles.headerRow}>
-        {/* Logo / Title */}
-        <ThemedText style={[styles.headerTitle, { color: textColor }]}>
-          WaterRadar
-        </ThemedText>
+        {/* Logo / Title with clean typography */}
+        <View style={styles.titleContainer}>
+          <ThemedText style={[styles.headerTitle, { color: textColor }]}>
+            WaterRadar
+          </ThemedText>
+          <View style={[styles.titleUnderline, { backgroundColor: activeIconColor }]} />
+        </View>
 
-        {/* Right section with controls */}
+        {/* Right section with clean icon layout */}
         <View style={styles.headerRight}>
-          {/* Theme Toggle Icon */}
+          {/* Theme Toggle with subtle background */}
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={colorScheme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
-            style={styles.headerIcon}
+            style={[styles.cleanIcon, { backgroundColor: colorScheme === 'light' ? 'rgba(59, 130, 246, 0.08)' : 'rgba(100, 181, 246, 0.12)' }]}
             onPress={toggleTheme}
-            hitSlop={10}
+            hitSlop={8}
           >
             <FontAwesome5 
               name={colorScheme === 'dark' ? "sun" : "moon"} 
-              size={20} 
-              color={iconColor} 
+              size={16} 
+              color={activeIconColor} 
             />
           </Pressable>
 
-          {/* Alerts Icon */}
+          {/* Alerts Icon with notification dot */}
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Alerts"
-            style={styles.headerIcon}
+            style={styles.cleanIcon}
             onPress={() => router.push('/(tabs)/alerts')}
-            hitSlop={10}
+            hitSlop={8}
           >
-            <FontAwesome5 name="bell" size={20} color={iconColor} />
+            <View style={styles.iconWrapper}>
+              <FontAwesome5 name="bell" size={16} color={iconColor} />
+              {/* Optional notification dot */}
+              <View style={[styles.notificationDot, { backgroundColor: Colors.light.statusLow }]} />
+            </View>
           </Pressable>
 
-          {/* Profile Icon */}
+          {/* Profile Icon - clean circular design */}
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Profile"
-            style={styles.profileIcon}
-            hitSlop={10}
+            style={[styles.profileIconClean, { borderColor: iconColor }]}
+            hitSlop={8}
             onPress={() => router.push('/(tabs)/Profile')}
           >
-            <FontAwesome5 name="user-circle" size={28} color={iconColor} />
+            <FontAwesome5 name="user" size={14} color={iconColor} />
           </Pressable>
         </View>
       </View>
@@ -201,18 +209,19 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   headerContainer: {
-    paddingTop: 8,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
+    paddingTop: 6,
+    paddingBottom: 16,
+    borderBottomWidth: 0.5,
+    // Minimal shadow for depth without heaviness
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
       },
       android: {
-        elevation: 3,
+        elevation: 1,
       },
     }),
   },
@@ -220,26 +229,70 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 4,
+    paddingHorizontal: 20,
+    paddingVertical: 6,
+    minHeight: 44, // Ensure consistent height like Expo Go
+  },
+  titleContainer: {
+    position: 'relative',
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
+    fontSize: 20,
+    fontWeight: '600',
+    letterSpacing: -0.3, // Tighter letter spacing for modern look
+    lineHeight: 24,
+  },
+  titleUnderline: {
+    position: 'absolute',
+    bottom: -4,
+    left: 0,
+    height: 2,
+    width: 32,
+    borderRadius: 1,
+    opacity: 0.8,
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
+    gap: 12, // Clean spacing between icons
   },
-  headerIcon: {
-    marginRight: 16,
-    padding: 4,
-  },
-  profileIcon: {
+  cleanIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 4,
+    // Subtle press feedback
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 1,
+      },
+    }),
+  },
+  iconWrapper: {
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationDot: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  profileIconClean: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
   },
 });
