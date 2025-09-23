@@ -61,9 +61,6 @@ export default function GroundwaterChart({ variant = 'light' }: { variant?: Vari
       <View style={styles.chartHeader}>
         <Text style={[styles.chartTitle, { color: colors.text }]}>Daily Groundwater Levels</Text>
         <View style={styles.headerStats}>
-          <Text style={[styles.totalRainfall, { color: colors.primary }]}>
-            Recent Rain: {mockData.reduce((sum, data) => sum + data.rainfall, 0)}mm
-          </Text>
           <Text style={[styles.deviation, { color: colors.success }]}>
             Trend: {((mockData[mockData.length - 1].level - mockData[0].level)).toFixed(1)}m
           </Text>

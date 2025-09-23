@@ -1,4 +1,3 @@
-import { AlertTriangle, Bell, Info, Shield, Zap } from 'lucide-react-native';
 import React, { useEffect, useRef } from 'react';
 import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -15,7 +14,6 @@ const alertsData = [
     message: 'Water level at Mumbai Suburban station has dropped below critical threshold (8.5m)',
     timestamp: '2 minutes ago',
     location: 'Mumbai Suburban - DWLR002',
-    icon: AlertTriangle,
   },
   {
     id: 2,
@@ -24,7 +22,6 @@ const alertsData = [
     message: 'Total Dissolved Solids level exceeded 500 ppm at Pune Central monitoring station',
     timestamp: '15 minutes ago',
     location: 'Pune Central - DWLR001',
-    icon: Shield,
   },
   {
     id: 3,
@@ -33,7 +30,6 @@ const alertsData = [
     message: 'Orange alert for thunderstorms in the region. Expected rainfall: 50-100mm',
     timestamp: '1 hour ago',
     location: 'Regional Weather Service',
-    icon: Zap,
   },
   {
     id: 4,
@@ -42,7 +38,6 @@ const alertsData = [
     message: 'Scheduled maintenance for monitoring equipment at Nashik Agricultural station',
     timestamp: '3 hours ago',
     location: 'Nashik Agricultural - DWLR003',
-    icon: Info,
   },
   {
     id: 5,
@@ -51,7 +46,6 @@ const alertsData = [
     message: 'Water extraction rate 15% above normal for current season',
     timestamp: '6 hours ago',
     location: 'Aurangabad Industrial - DWLR004',
-    icon: Bell,
   },
 ];
 
@@ -171,7 +165,6 @@ function AlertCard({ alert, index }: { alert: any; index: number }) {
   };
 
   const config = getAlertConfig(alert.type);
-  const Icon = alert.icon;
 
   return (
     <Animated.View
@@ -191,9 +184,6 @@ function AlertCard({ alert, index }: { alert: any; index: number }) {
         }
       ]}>
         <View style={styles.cardHeader}>
-          <View style={[styles.iconContainer, { backgroundColor: config.bgColor }]}>
-            <Icon size={24} color={config.color} />
-          </View>
           <View style={styles.titleContainer}>
             <ThemedText style={styles.cardTitle} numberOfLines={2}>{alert.title}</ThemedText>
           </View>
@@ -205,18 +195,6 @@ function AlertCard({ alert, index }: { alert: any; index: number }) {
           color: colorScheme === 'light' ? Colors.light.textSecondary : 'rgba(255,255,255,0.7)'
         }]}>{alert.timestamp} • {alert.location}</ThemedText>
         
-        <View style={[styles.dataRow, {
-          borderBottomColor: colorScheme === 'light' ? Colors.light.cardBorder : 'rgba(255,255,255,0.1)'
-        }]}>
-          <ThemedText style={[styles.dataLabel, {
-            color: colorScheme === 'light' ? Colors.light.textSecondary : 'rgba(255,255,255,0.8)'
-          }]}>Status</ThemedText>
-          <ThemedText style={[styles.dataValue, { 
-            color: config.color,
-          }]}>
-            {alert.type.charAt(0).toUpperCase() + alert.type.slice(1)}
-          </ThemedText>
-        </View>
         <View style={[styles.dataRowColumn, {
           borderBottomColor: colorScheme === 'light' ? Colors.light.cardBorder : 'rgba(255,255,255,0.1)'
         }]}>
@@ -312,14 +290,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 12,
     minHeight: 40,
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
   },
   titleContainer: {
     flex: 1,

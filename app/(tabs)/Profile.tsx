@@ -43,7 +43,7 @@ const ProfileHeader = ({ variant }: { variant: 'light' | 'dark' }) => {
         <ThemedText style={[styles.userName, { 
           color: variant === 'light' ? Colors.light.text : '#ffffff' 
         }]}>
-          John Doe
+          Devid John
         </ThemedText>
         <ThemedText style={[styles.userRole, { 
           color: variant === 'light' ? Colors.light.textSecondary : 'rgba(255,255,255,0.7)' 
@@ -180,7 +180,7 @@ const ProfileInfo = ({ variant }: { variant: 'light' | 'dark' }) => {
             }]}>Email</ThemedText>
             <ThemedText style={[styles.infoValue, { 
               color: variant === 'light' ? Colors.light.text : '#ffffff' 
-            }]}>john.doe@dwlr.gov.in</ThemedText>
+            }]}>john.devid@dwlr.gov.in</ThemedText>
           </View>
         </View>
 
