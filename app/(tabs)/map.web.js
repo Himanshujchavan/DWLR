@@ -1,59 +1,69 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
-const makeStation = (id, name, lat, long, waterLevel, depth) => ({ id, name, lat, long, waterLevel, depth });
+const makeStation = (id, name, lat, long, waterLevel, depth, aquiferType, gwAvailability, quality) => ({ 
+  id, 
+  name, 
+  lat, 
+  long, 
+  waterLevel, 
+  depth,
+  aquiferType: aquiferType || 'Alluvial',
+  gwAvailability: gwAvailability || 'Moderate',
+  quality: quality || { ph: 7.2, tds: 850, salinity: 'Fresh' }
+});
 
-// Enhanced DWLR Stations with regional distribution
+// Enhanced DWLR Stations with regional distribution and extended data
 const STATIONS = [
   // North Region - Delhi & NCR
-  makeStation('DWLR_DEL_01', 'Delhi Central', 28.6139, 77.2090, 3.4, 40),
-  makeStation('DWLR_DEL_02', 'Gurgaon', 28.4595, 77.0266, 1.8, 35),
-  makeStation('DWLR_GZB_01', 'Ghaziabad', 28.6692, 77.4538, 2.1, 32),
-  makeStation('DWLR_FAR_01', 'Faridabad', 28.4089, 77.3178, 1.9, 38),
+  makeStation('DWLR_DEL_01', 'Delhi Central', 28.6139, 77.2090, 3.4, 40, 'Alluvial', 'Good', { ph: 7.5, tds: 920, salinity: 'Fresh' }),
+  makeStation('DWLR_DEL_02', 'Gurgaon', 28.4595, 77.0266, 1.8, 35, 'Alluvial', 'Moderate', { ph: 7.8, tds: 1150, salinity: 'Fresh' }),
+  makeStation('DWLR_GZB_01', 'Ghaziabad', 28.6692, 77.4538, 2.1, 32, 'Alluvial', 'Moderate', { ph: 7.3, tds: 980, salinity: 'Fresh' }),
+  makeStation('DWLR_FAR_01', 'Faridabad', 28.4089, 77.3178, 1.9, 38, 'Alluvial', 'Poor', { ph: 7.6, tds: 1200, salinity: 'Brackish' }),
   
   // West Region - Maharashtra & Gujarat
-  makeStation('DWLR_MUM_01', 'Mumbai Central', 19.0760, 72.8777, 1.5, 28),
-  makeStation('DWLR_PUN_01', 'Pune', 18.5204, 73.8567, 0.9, 26),
-  makeStation('DWLR_NGP_01', 'Nagpur', 21.1458, 79.0882, 5.1, 29),
-  makeStation('DWLR_AHD_01', 'Ahmedabad', 23.0225, 72.5714, 2.6, 34),
-  makeStation('DWLR_SRT_01', 'Surat', 21.1702, 72.8311, 2.0, 31),
-  makeStation('DWLR_NAS_01', 'Nashik', 19.9975, 73.7898, 3.2, 33),
+  makeStation('DWLR_MUM_01', 'Mumbai Central', 19.0760, 72.8777, 1.5, 28, 'Basaltic', 'Poor', { ph: 6.9, tds: 1350, salinity: 'Brackish' }),
+  makeStation('DWLR_PUN_01', 'Pune', 18.5204, 73.8567, 0.9, 26, 'Basaltic', 'Good', { ph: 7.2, tds: 750, salinity: 'Fresh' }),
+  makeStation('DWLR_NGP_01', 'Nagpur', 21.1458, 79.0882, 5.1, 29, 'Crystalline', 'Excellent', { ph: 7.1, tds: 650, salinity: 'Fresh' }),
+  makeStation('DWLR_AHD_01', 'Ahmedabad', 23.0225, 72.5714, 2.6, 34, 'Alluvial', 'Moderate', { ph: 7.4, tds: 1050, salinity: 'Fresh' }),
+  makeStation('DWLR_SRT_01', 'Surat', 21.1702, 72.8311, 2.0, 31, 'Alluvial', 'Good', { ph: 7.0, tds: 800, salinity: 'Fresh' }),
+  makeStation('DWLR_NAS_01', 'Nashik', 19.9975, 73.7898, 3.2, 33, 'Basaltic', 'Good', { ph: 7.3, tds: 720, salinity: 'Fresh' }),
   
   // South Region - Tamil Nadu, Karnataka, Andhra Pradesh
-  makeStation('DWLR_CHN_01', 'Chennai', 13.0827, 80.2707, 4.8, 35),
-  makeStation('DWLR_BLR_01', 'Bangalore', 12.9716, 77.5946, 5.2, 41),
-  makeStation('DWLR_HYD_01', 'Hyderabad', 17.3850, 78.4867, 5.6, 38),
-  makeStation('DWLR_CJB_01', 'Coimbatore', 11.0168, 76.9558, 6.2, 42),
-  makeStation('DWLR_TVM_01', 'Thiruvananthapuram', 8.5241, 76.9366, 3.9, 37),
-  makeStation('DWLR_VZG_01', 'Visakhapatnam', 17.6868, 83.2185, 5.4, 39),
-  makeStation('DWLR_MDR_01', 'Madurai', 9.9252, 78.1198, 2.7, 36),
+  makeStation('DWLR_CHN_01', 'Chennai', 13.0827, 80.2707, 4.8, 35, 'Crystalline', 'Moderate', { ph: 6.8, tds: 1250, salinity: 'Brackish' }),
+  makeStation('DWLR_BLR_01', 'Bangalore', 12.9716, 77.5946, 5.2, 41, 'Crystalline', 'Good', { ph: 7.0, tds: 680, salinity: 'Fresh' }),
+  makeStation('DWLR_HYD_01', 'Hyderabad', 17.3850, 78.4867, 5.6, 38, 'Crystalline', 'Excellent', { ph: 7.2, tds: 620, salinity: 'Fresh' }),
+  makeStation('DWLR_CJB_01', 'Coimbatore', 11.0168, 76.9558, 6.2, 42, 'Crystalline', 'Excellent', { ph: 6.9, tds: 580, salinity: 'Fresh' }),
+  makeStation('DWLR_TVM_01', 'Thiruvananthapuram', 8.5241, 76.9366, 3.9, 37, 'Sedimentary', 'Good', { ph: 6.7, tds: 780, salinity: 'Fresh' }),
+  makeStation('DWLR_VZG_01', 'Visakhapatnam', 17.6868, 83.2185, 5.4, 39, 'Crystalline', 'Good', { ph: 7.1, tds: 890, salinity: 'Fresh' }),
+  makeStation('DWLR_MDR_01', 'Madurai', 9.9252, 78.1198, 2.7, 36, 'Crystalline', 'Moderate', { ph: 6.8, tds: 950, salinity: 'Fresh' }),
   
   // East Region - West Bengal, Odisha, Jharkhand
-  makeStation('DWLR_KOL_01', 'Kolkata', 22.5726, 88.3639, 1.9, 32),
-  makeStation('DWLR_RNC_01', 'Ranchi', 23.3441, 85.3096, 4.1, 27),
-  makeStation('DWLR_BBN_01', 'Bhubaneswar', 20.2961, 85.8245, 3.5, 34),
-  makeStation('DWLR_DHN_01', 'Dhanbad', 23.7957, 86.4304, 1.6, 29),
+  makeStation('DWLR_KOL_01', 'Kolkata', 22.5726, 88.3639, 1.9, 32, 'Alluvial', 'Poor', { ph: 7.8, tds: 1400, salinity: 'Brackish' }),
+  makeStation('DWLR_RNC_01', 'Ranchi', 23.3441, 85.3096, 4.1, 27, 'Crystalline', 'Good', { ph: 6.9, tds: 720, salinity: 'Fresh' }),
+  makeStation('DWLR_BBN_01', 'Bhubaneswar', 20.2961, 85.8245, 3.5, 34, 'Crystalline', 'Good', { ph: 7.0, tds: 810, salinity: 'Fresh' }),
+  makeStation('DWLR_DHN_01', 'Dhanbad', 23.7957, 86.4304, 1.6, 29, 'Crystalline', 'Moderate', { ph: 7.2, tds: 980, salinity: 'Fresh' }),
   
   // Central Region - Madhya Pradesh, Uttar Pradesh
-  makeStation('DWLR_BPL_01', 'Bhopal', 23.2599, 77.4126, 2.8, 31),
-  makeStation('DWLR_LKN_01', 'Lucknow', 26.8467, 80.9462, 3.1, 36),
-  makeStation('DWLR_GWAL_01', 'Gwalior', 26.2183, 78.1828, 1.7, 33),
-  makeStation('DWLR_IND_01', 'Indore', 22.7196, 75.8577, 2.3, 35),
-  makeStation('DWLR_KAN_01', 'Kanpur', 26.4499, 80.3319, 1.4, 30),
+  makeStation('DWLR_BPL_01', 'Bhopal', 23.2599, 77.4126, 2.8, 31, 'Crystalline', 'Good', { ph: 7.1, tds: 850, salinity: 'Fresh' }),
+  makeStation('DWLR_LKN_01', 'Lucknow', 26.8467, 80.9462, 3.1, 36, 'Alluvial', 'Moderate', { ph: 7.5, tds: 1080, salinity: 'Fresh' }),
+  makeStation('DWLR_GWAL_01', 'Gwalior', 26.2183, 78.1828, 1.7, 33, 'Alluvial', 'Poor', { ph: 7.7, tds: 1320, salinity: 'Brackish' }),
+  makeStation('DWLR_IND_01', 'Indore', 22.7196, 75.8577, 2.3, 35, 'Basaltic', 'Moderate', { ph: 7.0, tds: 920, salinity: 'Fresh' }),
+  makeStation('DWLR_KAN_01', 'Kanpur', 26.4499, 80.3319, 1.4, 30, 'Alluvial', 'Poor', { ph: 7.8, tds: 1450, salinity: 'Brackish' }),
   
   // North East Region
-  makeStation('DWLR_GHY_01', 'Guwahati', 26.1445, 91.7362, 1.3, 28),
-  makeStation('DWLR_SHL_01', 'Shillong', 25.5788, 91.8933, 4.9, 24),
-  makeStation('DWLR_IMP_01', 'Imphal', 24.8170, 93.9368, 2.4, 22),
-  makeStation('DWLR_AGT_01', 'Agartala', 23.8315, 91.2868, 3.6, 25),
+  makeStation('DWLR_GHY_01', 'Guwahati', 26.1445, 91.7362, 1.3, 28, 'Alluvial', 'Moderate', { ph: 6.8, tds: 1100, salinity: 'Fresh' }),
+  makeStation('DWLR_SHL_01', 'Shillong', 25.5788, 91.8933, 4.9, 24, 'Crystalline', 'Excellent', { ph: 6.5, tds: 420, salinity: 'Fresh' }),
+  makeStation('DWLR_IMP_01', 'Imphal', 24.8170, 93.9368, 2.4, 22, 'Sedimentary', 'Good', { ph: 6.7, tds: 680, salinity: 'Fresh' }),
+  makeStation('DWLR_AGT_01', 'Agartala', 23.8315, 91.2868, 3.6, 25, 'Sedimentary', 'Good', { ph: 6.9, tds: 750, salinity: 'Fresh' }),
   
   // Rajasthan Region
-  makeStation('DWLR_JAI_01', 'Jaipur', 26.9124, 75.7873, 2.2, 30),
-  makeStation('DWLR_JDH_01', 'Jodhpur', 26.2389, 73.0243, 1.1, 28),
-  makeStation('DWLR_UDR_01', 'Udaipur', 24.5854, 73.7125, 2.9, 32),
+  makeStation('DWLR_JAI_01', 'Jaipur', 26.9124, 75.7873, 2.2, 30, 'Crystalline', 'Moderate', { ph: 7.6, tds: 1200, salinity: 'Fresh' }),
+  makeStation('DWLR_JDH_01', 'Jodhpur', 26.2389, 73.0243, 1.1, 28, 'Crystalline', 'Poor', { ph: 8.1, tds: 1850, salinity: 'Saline' }),
+  makeStation('DWLR_UDR_01', 'Udaipur', 24.5854, 73.7125, 2.9, 32, 'Crystalline', 'Good', { ph: 7.4, tds: 980, salinity: 'Fresh' }),
 ];
 
 // Recharge zones (synthetic). recharge value in mm/day (mock).
@@ -125,13 +135,10 @@ const waterLevelCategory = (wl) => {
 };
 
 const stationColor = (wl) => {
-  const cat = waterLevelCategory(wl);
-  switch (cat) {
-    case 'low': return '#ef4444';
-    case 'moderate': return '#f59e42';
-    case 'high': return '#10b981';
-    default: return '#6b7280';
-  }
+  if (wl < 2) return '#f50';  // Critical - Red
+  if (wl < 4) return '#fa8c16'; // Low - Orange  
+  if (wl < 6) return '#52c41a'; // Normal - Green
+  return '#1890ff'; // High - Blue
 };
 
 const severityColors = {
@@ -141,29 +148,6 @@ const severityColors = {
 };
 
 // Generate mock historical water level arrays for each station (12 months) referencing initial static value
-const HISTORICAL_MAP = STATIONS.reduce((acc, st) => {
-  const base = st.waterLevel;
-  const months = Array.from({ length: 12 }).map((_, i) => {
-    // simulate seasonal sine wave + slight trend
-    const seasonal = Math.sin((i / 12) * Math.PI * 2) * 0.6; // +-0.6
-    const drift = (Math.random() - 0.5) * 0.3; // random small drift per series
-    return +(base + seasonal + drift).toFixed(2);
-  });
-  acc[st.id] = months;
-  return acc;
-}, {});
-
-const classifyTrend = (series) => {
-  if (!series || series.length < 2) return 'stable';
-  const first = series[0];
-  const last = series[series.length - 1];
-  const change = last - first;
-  if (change < -0.8) return 'strong-decline';
-  if (change < -0.3) return 'decline';
-  if (change > 0.8) return 'strong-rise';
-  if (change > 0.3) return 'rise';
-  return 'stable';
-};
 
 
 
@@ -278,8 +262,6 @@ const MapView = ({ style, initialRegion, stations, showRecharge, showAlerts, sho
           if (stations && Array.isArray(stations)) {
             stations.forEach(station => {
               const color = stationColor(station.waterLevel);
-              const status = waterLevelCategory(station.waterLevel);
-              const trend = classifyTrend(HISTORICAL_MAP[station.id] || []);
               
               const marker = L.circleMarker([station.lat, station.long], {
                 color: color,
@@ -290,16 +272,262 @@ const MapView = ({ style, initialRegion, stations, showRecharge, showAlerts, sho
               }).addTo(leafletMap);
 
               marker.bindPopup(`
-                <div style="font-family: Arial, sans-serif; min-width: 250px;">
-                  <h3 style="margin: 0 0 8px 0; color: #1a237e;">${station.name}</h3>
-                  <p style="margin: 4px 0;"><strong>ID:</strong> ${station.id}</p>
-                  <p style="margin: 4px 0;"><strong>Water Level:</strong> ${station.waterLevel}m</p>
-                  <p style="margin: 4px 0;"><strong>Depth:</strong> ${station.depth}m</p>
-                  <p style="margin: 4px 0;"><strong>Status:</strong> 
-                    <span style="color: ${color}; font-weight: bold; text-transform: uppercase;">${status}</span>
-                  </p>
-                  <p style="margin: 4px 0;"><strong>Trend:</strong> ${trend}</p>
-                  <p style="margin: 4px 0; color: #666; font-size: 12px;">Last updated: 2 hours ago</p>
+                <div style="
+                  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                  width: 320px; 
+                  padding: 16px; 
+                  background: linear-gradient(145deg, #ffffff, #f5f5f5);
+                  border-radius: 12px;
+                  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+                  border: 1px solid #e0e0e0;
+                  margin: 0;
+                ">
+                  <!-- Header Section -->
+                  <div style="
+                    background: linear-gradient(135deg, #2E86AB, #A23B72);
+                    color: white;
+                    padding: 12px 16px;
+                    border-radius: 8px;
+                    margin: -16px -16px 16px -16px;
+                    text-align: center;
+                  ">
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 600;">${station.name}</h3>
+                    <p style="margin: 4px 0 0 0; font-size: 11px; opacity: 0.9;">ID: ${station.id}</p>
+                  </div>
+
+                  <!-- Water Level Section -->
+                  <div style="
+                    background: #f8fbff;
+                    border-left: 4px solid #2E86AB;
+                    padding: 12px;
+                    margin-bottom: 12px;
+                    border-radius: 6px;
+                  ">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                      <span style="color: #2E86AB; font-size: 16px; margin-right: 6px;">💧</span>
+                      <strong style="color: #2E86AB; font-size: 13px;">Water Level</strong>
+                    </div>
+                    <div style="color: #333; font-size: 12px; line-height: 1.4;">
+                      <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>Current Level:</span>
+                        <strong style="color: #2E86AB;">${station.waterLevel} m</strong>
+                      </div>
+                      <div style="display: flex; justify-content: space-between;">
+                        <span>Total Depth:</span>
+                        <strong style="color: #666;">${station.depth} m</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Aquifer Information -->
+                  <div style="
+                    background: #fff8f0;
+                    border-left: 4px solid #FF8C42;
+                    padding: 12px;
+                    margin-bottom: 12px;
+                    border-radius: 6px;
+                  ">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                      <span style="color: #FF8C42; font-size: 16px; margin-right: 6px;">🏔️</span>
+                      <strong style="color: #FF8C42; font-size: 13px;">Aquifer Type</strong>
+                    </div>
+                    <div style="color: #333; font-size: 12px; line-height: 1.4;">
+                      <div style="background: #fff; padding: 6px 8px; border-radius: 4px; border: 1px solid #FFE0CC;">
+                        <strong style="color: #FF8C42;">${station.aquiferType}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Groundwater Availability -->
+                  <div style="
+                    background: #f0fff4;
+                    border-left: 4px solid #52C41A;
+                    padding: 12px;
+                    margin-bottom: 12px;
+                    border-radius: 6px;
+                  ">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                      <span style="color: #52C41A; font-size: 16px; margin-right: 6px;">💚</span>
+                      <strong style="color: #52C41A; font-size: 13px;">Availability Status</strong>
+                    </div>
+                    <div style="color: #333; font-size: 12px; line-height: 1.4;">
+                      <div style="background: #fff; padding: 6px 8px; border-radius: 4px; border: 1px solid #D9F7BE;">
+                        <strong style="color: ${
+                          station.gwAvailability === 'Excellent' ? '#52C41A' :
+                          station.gwAvailability === 'Good' ? '#73D13D' :
+                          station.gwAvailability === 'Moderate' ? '#FADB14' : '#F5222D'
+                        };">${station.gwAvailability}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Water Quality -->
+                  <div style="
+                    background: #f6ffed;
+                    border-left: 4px solid #13C2C2;
+                    padding: 12px;
+                    margin-bottom: 12px;
+                    border-radius: 6px;
+                  ">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                      <span style="color: #13C2C2; font-size: 16px; margin-right: 6px;">🧪</span>
+                      <strong style="color: #13C2C2; font-size: 13px;">Quality Parameters</strong>
+                    </div>
+                    <div style="color: #333; font-size: 11px; line-height: 1.3;">
+                      <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                        <span>pH Level:</span>
+                        <strong style="color: #13C2C2;">${station.quality.ph}</strong>
+                      </div>
+                      <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                        <span>TDS:</span>
+                        <strong style="color: #13C2C2;">${station.quality.tds} ppm</strong>
+                      </div>
+                      <div style="display: flex; justify-content: space-between;">
+                        <span>Salinity:</span>
+                        <strong style="color: ${
+                          station.quality.salinity === 'Fresh' ? '#52C41A' :
+                          station.quality.salinity === 'Brackish' ? '#FAAD14' : '#F5222D'
+                        };">${station.quality.salinity}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Monitoring Status -->
+                  <div style="
+                    background: #fef2f2;
+                    border-left: 4px solid #dc2626;
+                    padding: 12px;
+                    margin-bottom: 12px;
+                    border-radius: 6px;
+                  ">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                      <span style="color: #dc2626; font-size: 16px; margin-right: 6px;">📡</span>
+                      <strong style="color: #dc2626; font-size: 13px;">Monitoring Status</strong>
+                    </div>
+                    <div style="color: #333; font-size: 11px; line-height: 1.3;">
+                      <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                        <div style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; margin-right: 6px;"></div>
+                        <span>Real-time Active</span>
+                      </div>
+                      <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                        <span>Last Update:</span>
+                        <strong style="color: #6b7280;">15 mins ago</strong>
+                      </div>
+                      <div style="display: flex; justify-content: space-between;">
+                        <span>Signal Strength:</span>
+                        <strong style="color: #059669;">Strong</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Risk Assessment -->
+                  <div style="
+                    background: #fffbeb;
+                    border-left: 4px solid #f59e0b;
+                    padding: 12px;
+                    margin-bottom: 12px;
+                    border-radius: 6px;
+                  ">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                      <span style="color: #f59e0b; font-size: 16px; margin-right: 6px;">⚠️</span>
+                      <strong style="color: #f59e0b; font-size: 13px;">Risk Assessment</strong>
+                    </div>
+                    <div style="color: #333; font-size: 11px; line-height: 1.3;">
+                      <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>Depletion Risk:</span>
+                        <strong style="color: ${
+                          station.waterLevel < 2 ? '#dc2626' : 
+                          station.waterLevel < 4 ? '#f59e0b' : '#059669'
+                        };">
+                          ${station.waterLevel < 2 ? 'High' : 
+                            station.waterLevel < 4 ? 'Medium' : 'Low'}
+                        </strong>
+                      </div>
+                      <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>Recharge Potential:</span>
+                        <strong style="color: ${
+                          station.aquiferType === 'Alluvial' ? '#059669' : 
+                          station.aquiferType === 'Crystalline' ? '#f59e0b' : '#2563eb'
+                        };">
+                          ${station.aquiferType === 'Alluvial' ? 'High' : 
+                            station.aquiferType === 'Crystalline' ? 'Variable' : 'Good'}
+                        </strong>
+                      </div>
+                      <div style="
+                        background: #f3f4f6; 
+                        padding: 8px; 
+                        border-radius: 4px; 
+                        text-align: center;
+                        font-style: italic;
+                      ">
+                        ${station.waterLevel < 2 ? 
+                          '⚠️ Critical: Immediate conservation needed' :
+                          station.waterLevel < 4 ? 
+                          '⚡ Moderate: Monitor usage closely' : 
+                          '✅ Stable: Sustainable extraction possible'
+                        }
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div style="
+                    display: flex; 
+                    gap: 8px; 
+                    margin-top: 16px;
+                  ">
+                    <button style="
+                      flex: 1;
+                      background: #2563eb;
+                      color: white;
+                      border: none;
+                      padding: 10px 12px;
+                      border-radius: 6px;
+                      font-size: 11px;
+                      font-weight: 600;
+                      cursor: pointer;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 4px;
+                    ">
+                      🎯 Focus
+                    </button>
+                    <button style="
+                      flex: 1;
+                      background: white;
+                      color: #2563eb;
+                      border: 1px solid #2563eb;
+                      padding: 10px 12px;
+                      border-radius: 6px;
+                      font-size: 11px;
+                      font-weight: 600;
+                      cursor: pointer;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 4px;
+                    ">
+                      📊 Report
+                    </button>
+                    <button style="
+                      flex: 1;
+                      background: white;
+                      color: #2563eb;
+                      border: 1px solid #2563eb;
+                      padding: 10px 12px;
+                      border-radius: 6px;
+                      font-size: 11px;
+                      font-weight: 600;
+                      cursor: pointer;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 4px;
+                    ">
+                      📤 Share
+                    </button>
+                  </div>
                 </div>
               `);
             });

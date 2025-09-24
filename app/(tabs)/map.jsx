@@ -1,5 +1,4 @@
 
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -7,64 +6,79 @@ import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } fr
 // Conditional import to prevent native modules loading on web
 let MapView, Callout, Circle, Marker, Polygon, PROVIDER_GOOGLE;
 if (Platform.OS !== 'web') {
-  const maps = require('react-native-maps');
-  MapView = maps.default;
-  Callout = maps.Callout;
-  Circle = maps.Circle;
-  Marker = maps.Marker;
-  Polygon = maps.Polygon;
-  PROVIDER_GOOGLE = maps.PROVIDER_GOOGLE;
+  try {
+    const maps = require('react-native-maps');
+    MapView = maps.default;
+    Callout = maps.Callout;
+    Circle = maps.Circle;
+    Marker = maps.Marker;
+    Polygon = maps.Polygon;
+    PROVIDER_GOOGLE = maps.PROVIDER_GOOGLE;
+  } catch (_error) {
+    console.log('react-native-maps not available, using fallback');
+    MapView = null;
+  }
 }
-const makeStation = (id, name, lat, long, waterLevel, depth) => ({ id, name, lat, long, waterLevel, depth });
+const makeStation = (id, name, lat, long, waterLevel, depth, aquiferType, gwAvailability, quality) => ({ 
+  id, 
+  name, 
+  lat, 
+  long, 
+  waterLevel, 
+  depth,
+  aquiferType: aquiferType || 'Alluvial',
+  gwAvailability: gwAvailability || 'Moderate',
+  quality: quality || { ph: 7.2, tds: 850, salinity: 'Fresh' }
+});
 
-// Enhanced DWLR Stations with regional distribution
+// Enhanced DWLR Stations with regional distribution and extended data
 const STATIONS = [
   // North Region - Delhi & NCR
-  makeStation('DWLR_DEL_01', 'Delhi Central', 28.6139, 77.2090, 3.4, 40),
-  makeStation('DWLR_DEL_02', 'Gurgaon', 28.4595, 77.0266, 1.8, 35),
-  makeStation('DWLR_GZB_01', 'Ghaziabad', 28.6692, 77.4538, 2.1, 32),
-  makeStation('DWLR_FAR_01', 'Faridabad', 28.4089, 77.3178, 1.9, 38),
+  makeStation('DWLR_DEL_01', 'Delhi Central', 28.6139, 77.2090, 3.4, 40, 'Alluvial', 'Good', { ph: 7.5, tds: 920, salinity: 'Fresh' }),
+  makeStation('DWLR_DEL_02', 'Gurgaon', 28.4595, 77.0266, 1.8, 35, 'Alluvial', 'Moderate', { ph: 7.8, tds: 1150, salinity: 'Fresh' }),
+  makeStation('DWLR_GZB_01', 'Ghaziabad', 28.6692, 77.4538, 2.1, 32, 'Alluvial', 'Moderate', { ph: 7.3, tds: 980, salinity: 'Fresh' }),
+  makeStation('DWLR_FAR_01', 'Faridabad', 28.4089, 77.3178, 1.9, 38, 'Alluvial', 'Poor', { ph: 7.6, tds: 1200, salinity: 'Brackish' }),
   
   // West Region - Maharashtra & Gujarat
-  makeStation('DWLR_MUM_01', 'Mumbai Central', 19.0760, 72.8777, 1.5, 28),
-  makeStation('DWLR_PUN_01', 'Pune', 18.5204, 73.8567, 0.9, 26),
-  makeStation('DWLR_NGP_01', 'Nagpur', 21.1458, 79.0882, 5.1, 29),
-  makeStation('DWLR_AHD_01', 'Ahmedabad', 23.0225, 72.5714, 2.6, 34),
-  makeStation('DWLR_SRT_01', 'Surat', 21.1702, 72.8311, 2.0, 31),
-  makeStation('DWLR_NAS_01', 'Nashik', 19.9975, 73.7898, 3.2, 33),
+  makeStation('DWLR_MUM_01', 'Mumbai Central', 19.0760, 72.8777, 1.5, 28, 'Basaltic', 'Poor', { ph: 6.9, tds: 1350, salinity: 'Brackish' }),
+  makeStation('DWLR_PUN_01', 'Pune', 18.5204, 73.8567, 0.9, 26, 'Basaltic', 'Good', { ph: 7.2, tds: 750, salinity: 'Fresh' }),
+  makeStation('DWLR_NGP_01', 'Nagpur', 21.1458, 79.0882, 5.1, 29, 'Crystalline', 'Excellent', { ph: 7.1, tds: 650, salinity: 'Fresh' }),
+  makeStation('DWLR_AHD_01', 'Ahmedabad', 23.0225, 72.5714, 2.6, 34, 'Alluvial', 'Moderate', { ph: 7.4, tds: 1050, salinity: 'Fresh' }),
+  makeStation('DWLR_SRT_01', 'Surat', 21.1702, 72.8311, 2.0, 31, 'Alluvial', 'Good', { ph: 7.0, tds: 800, salinity: 'Fresh' }),
+  makeStation('DWLR_NAS_01', 'Nashik', 19.9975, 73.7898, 3.2, 33, 'Basaltic', 'Good', { ph: 7.3, tds: 720, salinity: 'Fresh' }),
   
   // South Region - Tamil Nadu, Karnataka, Andhra Pradesh
-  makeStation('DWLR_CHN_01', 'Chennai', 13.0827, 80.2707, 4.8, 35),
-  makeStation('DWLR_BLR_01', 'Bangalore', 12.9716, 77.5946, 5.2, 41),
-  makeStation('DWLR_HYD_01', 'Hyderabad', 17.3850, 78.4867, 5.6, 38),
-  makeStation('DWLR_CJB_01', 'Coimbatore', 11.0168, 76.9558, 6.2, 42),
-  makeStation('DWLR_TVM_01', 'Thiruvananthapuram', 8.5241, 76.9366, 3.9, 37),
-  makeStation('DWLR_VZG_01', 'Visakhapatnam', 17.6868, 83.2185, 5.4, 39),
-  makeStation('DWLR_MDR_01', 'Madurai', 9.9252, 78.1198, 2.7, 36),
+  makeStation('DWLR_CHN_01', 'Chennai', 13.0827, 80.2707, 4.8, 35, 'Crystalline', 'Moderate', { ph: 6.8, tds: 1250, salinity: 'Brackish' }),
+  makeStation('DWLR_BLR_01', 'Bangalore', 12.9716, 77.5946, 5.2, 41, 'Crystalline', 'Good', { ph: 7.0, tds: 680, salinity: 'Fresh' }),
+  makeStation('DWLR_HYD_01', 'Hyderabad', 17.3850, 78.4867, 5.6, 38, 'Crystalline', 'Excellent', { ph: 7.2, tds: 620, salinity: 'Fresh' }),
+  makeStation('DWLR_CJB_01', 'Coimbatore', 11.0168, 76.9558, 6.2, 42, 'Crystalline', 'Excellent', { ph: 6.9, tds: 580, salinity: 'Fresh' }),
+  makeStation('DWLR_TVM_01', 'Thiruvananthapuram', 8.5241, 76.9366, 3.9, 37, 'Sedimentary', 'Good', { ph: 6.7, tds: 780, salinity: 'Fresh' }),
+  makeStation('DWLR_VZG_01', 'Visakhapatnam', 17.6868, 83.2185, 5.4, 39, 'Crystalline', 'Good', { ph: 7.1, tds: 890, salinity: 'Fresh' }),
+  makeStation('DWLR_MDR_01', 'Madurai', 9.9252, 78.1198, 2.7, 36, 'Crystalline', 'Moderate', { ph: 6.8, tds: 950, salinity: 'Fresh' }),
   
   // East Region - West Bengal, Odisha, Jharkhand
-  makeStation('DWLR_KOL_01', 'Kolkata', 22.5726, 88.3639, 1.9, 32),
-  makeStation('DWLR_RNC_01', 'Ranchi', 23.3441, 85.3096, 4.1, 27),
-  makeStation('DWLR_BBN_01', 'Bhubaneswar', 20.2961, 85.8245, 3.5, 34),
-  makeStation('DWLR_DHN_01', 'Dhanbad', 23.7957, 86.4304, 1.6, 29),
+  makeStation('DWLR_KOL_01', 'Kolkata', 22.5726, 88.3639, 1.9, 32, 'Alluvial', 'Poor', { ph: 7.8, tds: 1400, salinity: 'Brackish' }),
+  makeStation('DWLR_RNC_01', 'Ranchi', 23.3441, 85.3096, 4.1, 27, 'Crystalline', 'Good', { ph: 6.9, tds: 720, salinity: 'Fresh' }),
+  makeStation('DWLR_BBN_01', 'Bhubaneswar', 20.2961, 85.8245, 3.5, 34, 'Crystalline', 'Good', { ph: 7.0, tds: 810, salinity: 'Fresh' }),
+  makeStation('DWLR_DHN_01', 'Dhanbad', 23.7957, 86.4304, 1.6, 29, 'Crystalline', 'Moderate', { ph: 7.2, tds: 980, salinity: 'Fresh' }),
   
   // Central Region - Madhya Pradesh, Uttar Pradesh
-  makeStation('DWLR_BPL_01', 'Bhopal', 23.2599, 77.4126, 2.8, 31),
-  makeStation('DWLR_LKN_01', 'Lucknow', 26.8467, 80.9462, 3.1, 36),
-  makeStation('DWLR_GWAL_01', 'Gwalior', 26.2183, 78.1828, 1.7, 33),
-  makeStation('DWLR_IND_01', 'Indore', 22.7196, 75.8577, 2.3, 35),
-  makeStation('DWLR_KAN_01', 'Kanpur', 26.4499, 80.3319, 1.4, 30),
+  makeStation('DWLR_BPL_01', 'Bhopal', 23.2599, 77.4126, 2.8, 31, 'Crystalline', 'Good', { ph: 7.1, tds: 850, salinity: 'Fresh' }),
+  makeStation('DWLR_LKN_01', 'Lucknow', 26.8467, 80.9462, 3.1, 36, 'Alluvial', 'Moderate', { ph: 7.5, tds: 1080, salinity: 'Fresh' }),
+  makeStation('DWLR_GWAL_01', 'Gwalior', 26.2183, 78.1828, 1.7, 33, 'Alluvial', 'Poor', { ph: 7.7, tds: 1320, salinity: 'Brackish' }),
+  makeStation('DWLR_IND_01', 'Indore', 22.7196, 75.8577, 2.3, 35, 'Basaltic', 'Moderate', { ph: 7.0, tds: 920, salinity: 'Fresh' }),
+  makeStation('DWLR_KAN_01', 'Kanpur', 26.4499, 80.3319, 1.4, 30, 'Alluvial', 'Poor', { ph: 7.8, tds: 1450, salinity: 'Brackish' }),
   
   // North East Region
-  makeStation('DWLR_GHY_01', 'Guwahati', 26.1445, 91.7362, 1.3, 28),
-  makeStation('DWLR_SHL_01', 'Shillong', 25.5788, 91.8933, 4.9, 24),
-  makeStation('DWLR_IMP_01', 'Imphal', 24.8170, 93.9368, 2.4, 22),
-  makeStation('DWLR_AGT_01', 'Agartala', 23.8315, 91.2868, 3.6, 25),
+  makeStation('DWLR_GHY_01', 'Guwahati', 26.1445, 91.7362, 1.3, 28, 'Alluvial', 'Moderate', { ph: 6.8, tds: 1100, salinity: 'Fresh' }),
+  makeStation('DWLR_SHL_01', 'Shillong', 25.5788, 91.8933, 4.9, 24, 'Crystalline', 'Excellent', { ph: 6.5, tds: 420, salinity: 'Fresh' }),
+  makeStation('DWLR_IMP_01', 'Imphal', 24.8170, 93.9368, 2.4, 22, 'Sedimentary', 'Good', { ph: 6.7, tds: 680, salinity: 'Fresh' }),
+  makeStation('DWLR_AGT_01', 'Agartala', 23.8315, 91.2868, 3.6, 25, 'Sedimentary', 'Good', { ph: 6.9, tds: 750, salinity: 'Fresh' }),
   
   // Rajasthan Region
-  makeStation('DWLR_JAI_01', 'Jaipur', 26.9124, 75.7873, 2.2, 30),
-  makeStation('DWLR_JDH_01', 'Jodhpur', 26.2389, 73.0243, 1.1, 28),
-  makeStation('DWLR_UDR_01', 'Udaipur', 24.5854, 73.7125, 2.9, 32),
+  makeStation('DWLR_JAI_01', 'Jaipur', 26.9124, 75.7873, 2.2, 30, 'Crystalline', 'Moderate', { ph: 7.6, tds: 1200, salinity: 'Fresh' }),
+  makeStation('DWLR_JDH_01', 'Jodhpur', 26.2389, 73.0243, 1.1, 28, 'Crystalline', 'Poor', { ph: 8.1, tds: 1850, salinity: 'Saline' }),
+  makeStation('DWLR_UDR_01', 'Udaipur', 24.5854, 73.7125, 2.9, 32, 'Crystalline', 'Good', { ph: 7.4, tds: 980, salinity: 'Fresh' }),
 ];
 
 // Recharge zones (synthetic). recharge value in mm/day (mock).
@@ -182,6 +196,66 @@ const HISTORICAL_MAP = STATIONS.reduce((acc, st) => {
   return acc;
 }, {});
 
+// Helper functions for enhanced station data
+const getWaterQualityStatus = (quality) => {
+  if (!quality) return 'Unknown';
+  const { ph, tds, salinity } = quality;
+  
+  if (salinity === 'Saline' || tds > 1500 || ph < 6.5 || ph > 8.5) return 'Poor';
+  if (tds > 1000 || ph < 6.8 || ph > 8.2) return 'Moderate';
+  return 'Good';
+};
+
+const getAvailabilityColor = (availability) => {
+  switch (availability) {
+    case 'Excellent': return '#22c55e';
+    case 'Good': return '#84cc16';
+    case 'Moderate': return '#eab308';
+    case 'Poor': return '#f97316';
+    default: return '#6b7280';
+  }
+};
+
+const getQualityColor = (status) => {
+  switch (status) {
+    case 'Good': return '#22c55e';
+    case 'Moderate': return '#eab308';
+    case 'Poor': return '#ef4444';
+    default: return '#6b7280';
+  }
+};
+
+const getAquiferInfo = (aquiferType) => {
+  const aquiferData = {
+    'Alluvial': { 
+      description: 'High porosity, good yield', 
+      permeability: 'High',
+      storage: 'Excellent'
+    },
+    'Crystalline': { 
+      description: 'Fractured rock, variable yield', 
+      permeability: 'Variable',
+      storage: 'Moderate'
+    },
+    'Basaltic': { 
+      description: 'Vesicular rock, moderate yield', 
+      permeability: 'Moderate',
+      storage: 'Good'
+    },
+    'Sedimentary': { 
+      description: 'Layered rock, good storage', 
+      permeability: 'Moderate to High',
+      storage: 'Good'
+    }
+  };
+  
+  return aquiferData[aquiferType] || {
+    description: 'Mixed formation',
+    permeability: 'Variable',
+    storage: 'Variable'
+  };
+};
+
 const classifyTrend = (series) => {
   if (!series || series.length < 2) return 'stable';
   const first = series[0];
@@ -208,8 +282,6 @@ const trendColor = (trend) => {
 // Component
 // ------------------------------------------------------------
 const MapScreen = () => {
-  const colorScheme = useColorScheme();
-  
   // Layer visibility toggles
   // Only stations layer visible by default; others start hidden for clarity
   const [showStations, setShowStations] = useState(true);
@@ -232,9 +304,31 @@ const MapScreen = () => {
   // Hide regional stats by default to keep initial map view clear
   const [showRegionalStats, setShowRegionalStats] = useState(false);
   const [alertFilter, setAlertFilter] = useState('all'); // all | high | medium | low
+  
+  // Zoom level tracking for enhanced popup (can be used for future enhancements)
+  const [, setCurrentZoom] = useState(null);
+
+  // Debug: Log stations on mount
+  useEffect(() => {
+    console.log('STATIONS array:', STATIONS.length, 'stations loaded');
+    console.log('Sample stations:', STATIONS.slice(0, 3));
+    console.log('Visakhapatnam station:', STATIONS.find(s => s.name?.includes('Visakhapatnam')));
+  }, []);
+
+  // Debug: Log state values
+  useEffect(() => {
+    console.log('Map states:', {
+      showStations,
+      filteredStations: filteredStations?.length || 0,
+      liveStations: liveStations?.length || 0
+    });
+  }, [showStations, filteredStations, liveStations]);
 
   // Real-time mutable station state (clone from static initial)
-  const [liveStations, setLiveStations] = useState(() => STATIONS.map(s => ({ ...s })));
+  const [liveStations, setLiveStations] = useState(() => {
+    console.log('Initializing liveStations with', STATIONS.length, 'stations');
+    return STATIONS.map(s => ({ ...s }));
+  });
   const intervalRef = useRef(null);
   const mapRef = useRef(null);
 
@@ -444,15 +538,21 @@ const MapScreen = () => {
   }, [liveStations]);
 
   const renderStation = useCallback((station) => {
+    console.log('Rendering station:', station?.id, station?.name, station?.lat, station?.long);
+    
     if (!station || !station.id || typeof station.lat !== 'number' || typeof station.long !== 'number') {
+      console.log('Station validation failed:', station);
       return null;
     }
     
     const isFavorite = Array.isArray(favorites) && favorites.includes(station.id);
     const isSelected = selectedStation?.id === station.id;
+    const qualityStatus = getWaterQualityStatus(station.quality);
+    const aquiferInfo = getAquiferInfo(station.aquiferType);
+    
+    console.log('Creating marker for station:', station.name);
     
     return (
-      
       <Marker
         key={station.id}
         coordinate={{ latitude: station.lat, longitude: station.long }}
@@ -461,49 +561,358 @@ const MapScreen = () => {
         description={`Water Level: ${station.waterLevel || 0} m`}
         onPress={() => focusOnStation(station)}
       >
-        <Callout tooltip onPress={() => focusOnStation(station)}>
-          <View style={styles.callout}>
+        <Callout>
+          <View style={styles.enhancedCallout}>
+            {/* Header Section */}
             <View style={styles.calloutHeader}>
-              <Text style={styles.calloutTitle}>{station.name || 'Unknown Station'}</Text>
+              <View style={styles.stationTitleContainer}>
+                <Text style={styles.calloutTitle}>{station.name || 'Unknown Station'}</Text>
+                <Text style={styles.stationId}>ID: {station.id}</Text>
+              </View>
               <Pressable 
                 onPress={() => toggleFavorite(station.id)}
                 style={styles.favoriteButton}
               >
                 <Ionicons 
                   name={isFavorite ? "star" : "star-outline"}
-                  size={18}
+                  size={20}
                   color={isFavorite ? "#ffd700" : "#ccc"}
                 />
               </Pressable>
             </View>
-            <Text style={styles.calloutText}>ID: {station.id}</Text>
-            <Text style={styles.calloutText}>
-              Water Level: {station.waterLevel || 0} m ({waterLevelCategory(station.waterLevel || 0)})
-            </Text>
-            <Text style={styles.calloutText}>Depth: {station.depth || 0} m</Text>
-            <Text style={styles.calloutTrend}>
-              Trend: {classifyTrend(HISTORICAL_MAP[station.id] || [])}
-            </Text>
-            <Pressable 
-              onPress={() => focusOnStation(station)}
-              style={styles.focusButton}
-            >
-              <Text style={styles.focusButtonText}>Focus on Station</Text>
-            </Pressable>
+
+            {/* Groundwater Level Section */}
+            <View style={styles.statisticsSection}>
+              <View style={styles.sectionTitle}>
+                <Ionicons name="water" size={16} color="#2563eb" />
+                <Text style={styles.sectionTitleText}>Groundwater Level</Text>
+              </View>
+              <View style={styles.levelStats}>
+                <View style={styles.levelItem}>
+                  <Text style={styles.levelValue}>{station.waterLevel || 0}m</Text>
+                  <Text style={styles.levelLabel}>Current Level</Text>
+                  <Text style={[styles.levelCategory, { 
+                    color: stationColor(station.waterLevel || 0) 
+                  }]}>
+                    {waterLevelCategory(station.waterLevel || 0).toUpperCase()}
+                  </Text>
+                </View>
+                <View style={styles.levelItem}>
+                  <Text style={styles.levelValue}>{station.depth || 0}m</Text>
+                  <Text style={styles.levelLabel}>Total Depth</Text>
+                </View>
+                <View style={styles.levelItem}>
+                  <Text style={styles.levelValue}>
+                    {Math.max(0, (station.depth || 0) - (station.waterLevel || 0)).toFixed(1)}m
+                  </Text>
+                  <Text style={styles.levelLabel}>Available</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Aquifer Information Section */}
+            <View style={styles.statisticsSection}>
+              <View style={styles.sectionTitle}>
+                <Ionicons name="layers" size={16} color="#059669" />
+                <Text style={styles.sectionTitleText}>Aquifer Information</Text>
+              </View>
+              <View style={styles.aquiferInfo}>
+                <View style={styles.aquiferItem}>
+                  <Text style={styles.aquiferType}>{station.aquiferType || 'Unknown'}</Text>
+                  <Text style={styles.aquiferDescription}>{aquiferInfo.description}</Text>
+                </View>
+                <View style={styles.aquiferProperties}>
+                  <View style={styles.propertyItem}>
+                    <Text style={styles.propertyLabel}>Permeability:</Text>
+                    <Text style={styles.propertyValue}>{aquiferInfo.permeability}</Text>
+                  </View>
+                  <View style={styles.propertyItem}>
+                    <Text style={styles.propertyLabel}>Storage:</Text>
+                    <Text style={styles.propertyValue}>{aquiferInfo.storage}</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* Groundwater Availability Section */}
+            <View style={styles.statisticsSection}>
+              <View style={styles.sectionTitle}>
+                <Ionicons name="analytics" size={16} color="#7c3aed" />
+                <Text style={styles.sectionTitleText}>Availability & Quality</Text>
+              </View>
+              <View style={styles.availabilityInfo}>
+                <View style={styles.availabilityItem}>
+                  <Text style={styles.availabilityLabel}>Status:</Text>
+                  <View style={[styles.availabilityBadge, { 
+                    backgroundColor: getAvailabilityColor(station.gwAvailability) + '20',
+                    borderColor: getAvailabilityColor(station.gwAvailability)
+                  }]}>
+                    <Text style={[styles.availabilityText, { 
+                      color: getAvailabilityColor(station.gwAvailability) 
+                    }]}>
+                      {station.gwAvailability || 'Unknown'}
+                    </Text>
+                  </View>
+                </View>
+                
+                <View style={styles.qualityMetrics}>
+                  <View style={styles.qualityItem}>
+                    <Text style={styles.qualityLabel}>pH:</Text>
+                    <Text style={[styles.qualityValue, { 
+                      color: getQualityColor(qualityStatus) 
+                    }]}>
+                      {station.quality?.ph || 'N/A'}
+                    </Text>
+                  </View>
+                  <View style={styles.qualityItem}>
+                    <Text style={styles.qualityLabel}>TDS:</Text>
+                    <Text style={[styles.qualityValue, { 
+                      color: getQualityColor(qualityStatus) 
+                    }]}>
+                      {station.quality?.tds || 'N/A'} ppm
+                    </Text>
+                  </View>
+                  <View style={styles.qualityItem}>
+                    <Text style={styles.qualityLabel}>Salinity:</Text>
+                    <Text style={[styles.qualityValue, { 
+                      color: getQualityColor(qualityStatus) 
+                    }]}>
+                      {station.quality?.salinity || 'N/A'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* Additional Monitoring Data */}
+            <View style={styles.statisticsSection}>
+              <View style={styles.sectionTitle}>
+                <Ionicons name="pulse" size={16} color="#dc2626" />
+                <Text style={styles.sectionTitleText}>Monitoring Status</Text>
+              </View>
+              <View style={styles.monitoringInfo}>
+                <View style={styles.statusItem}>
+                  <View style={[styles.statusIndicator, { backgroundColor: '#22c55e' }]} />
+                  <Text style={styles.statusText}>Real-time Active</Text>
+                </View>
+                <View style={styles.statusItem}>
+                  <Ionicons name="time" size={14} color="#6b7280" />
+                  <Text style={styles.lastUpdateText}>Updated: 15 mins ago</Text>
+                </View>
+                <View style={styles.statusItem}>
+                  <Ionicons name="cellular" size={14} color="#059669" />
+                  <Text style={styles.signalText}>Signal: Strong</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Risk Assessment & Recommendations */}
+            <View style={styles.statisticsSection}>
+              <View style={styles.sectionTitle}>
+                <Ionicons name="warning" size={16} color="#f59e0b" />
+                <Text style={styles.sectionTitleText}>Assessment</Text>
+              </View>
+              <View style={styles.assessmentInfo}>
+                <View style={styles.riskItem}>
+                  <Text style={styles.riskLabel}>Depletion Risk:</Text>
+                  <Text style={[styles.riskValue, { 
+                    color: (station.waterLevel || 0) < 2 ? '#dc2626' : 
+                          (station.waterLevel || 0) < 4 ? '#f59e0b' : '#059669'
+                  }]}>
+                    {(station.waterLevel || 0) < 2 ? 'High' : 
+                     (station.waterLevel || 0) < 4 ? 'Medium' : 'Low'}
+                  </Text>
+                </View>
+                <View style={styles.riskItem}>
+                  <Text style={styles.riskLabel}>Recharge Potential:</Text>
+                  <Text style={[styles.riskValue, { 
+                    color: station.aquiferType === 'Alluvial' ? '#059669' : 
+                          station.aquiferType === 'Crystalline' ? '#f59e0b' : '#2563eb'
+                  }]}>
+                    {station.aquiferType === 'Alluvial' ? 'High' : 
+                     station.aquiferType === 'Crystalline' ? 'Variable' : 'Good'}
+                  </Text>
+                </View>
+                <Text style={styles.recommendationText}>
+                  {(station.waterLevel || 0) < 2 ? 
+                    '⚠️ Critical: Immediate conservation needed' :
+                    (station.waterLevel || 0) < 4 ? 
+                    '⚡ Moderate: Monitor usage closely' : 
+                    '✅ Stable: Sustainable extraction possible'
+                  }
+                </Text>
+              </View>
+            </View>
+
+            {/* Trend Information */}
+            <View style={styles.trendSection}>
+              <Text style={styles.trendLabel}>
+                Trend: {classifyTrend(HISTORICAL_MAP[station.id] || [])}
+              </Text>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.actionButtonsContainer}>
+              <Pressable 
+                onPress={() => focusOnStation(station)}
+                style={[styles.calloutActionButton, styles.primaryButton]}
+              >
+                <Ionicons name="location" size={16} color="#fff" />
+                <Text style={styles.calloutActionButtonText}>Focus</Text>
+              </Pressable>
+              
+              <Pressable 
+                onPress={() => console.log('View detailed report for', station.id)}
+                style={[styles.calloutActionButton, styles.secondaryButton]}
+              >
+                <Ionicons name="bar-chart" size={16} color="#2563eb" />
+                <Text style={[styles.calloutActionButtonText, { color: '#2563eb' }]}>Report</Text>
+              </Pressable>
+              
+              <Pressable 
+                onPress={() => console.log('Share station data', station.id)}
+                style={[styles.calloutActionButton, styles.secondaryButton]}
+              >
+                <Ionicons name="share" size={16} color="#2563eb" />
+                <Text style={[styles.calloutActionButtonText, { color: '#2563eb' }]}>Share</Text>
+              </Pressable>
+            </View>
           </View>
         </Callout>
       </Marker>
     );
   }, [favorites, selectedStation, focusOnStation, toggleFavorite]);
 
-  // On web, show a simple fallback that explains native maps aren't supported
-  if (Platform.OS === 'web') {
+  // Check if running in Expo Go or if maps are not available
+  if (Platform.OS === 'web' || !MapView) {
     return (
-      <View style={styles.webFallback}>
-        <Text style={styles.webFallbackTitle}>Map View</Text>
-        <Text style={styles.webFallbackText}>
-          Native maps are not supported on web. Please use the mobile app for the full map experience.
-        </Text>
+      <View style={styles.container}>
+        <View style={styles.expoGoHeader}>
+          <Text style={styles.expoGoTitle}>DWLR Station Monitor</Text>
+          <Text style={styles.expoGoSubtitle}>
+            {Platform.OS === 'web' ? 'Web View' : 'Expo Go View'} - {filteredStations.length} Stations
+          </Text>
+        </View>
+
+        {/* Filter Controls */}
+        <View style={styles.filterContainer}>
+          <Pressable
+            style={[styles.filterButton, waterFilter === 'all' && styles.filterButtonActive]}
+            onPress={() => setWaterFilter('all')}
+          >
+            <Text style={[styles.filterText, waterFilter === 'all' && styles.filterTextActive]}>All</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.filterButton, waterFilter === 'low' && styles.filterButtonActive]}
+            onPress={() => setWaterFilter('low')}
+          >
+            <Text style={[styles.filterText, waterFilter === 'low' && styles.filterTextActive]}>Critical</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.filterButton, waterFilter === 'high' && styles.filterButtonActive]}
+            onPress={() => setWaterFilter('high')}
+          >
+            <Text style={[styles.filterText, waterFilter === 'high' && styles.filterTextActive]}>Good</Text>
+          </Pressable>
+        </View>
+
+        {/* DWLR Stations List */}
+        <ScrollView style={styles.stationsList} showsVerticalScrollIndicator={false}>
+          {filteredStations.map((station) => {
+            
+            return (
+              <Pressable
+                key={station.id}
+                style={styles.stationCard}
+                onPress={() => setSelectedStation(station)}
+              >
+                {/* Station Header */}
+                <View style={styles.stationHeader}>
+                  <View style={styles.stationTitleSection}>
+                    <Text style={styles.stationCardName}>{station.name}</Text>
+                    <Text style={styles.stationCardId}>ID: {station.id}</Text>
+                  </View>
+                  <View style={[styles.stationStatusIndicator, { 
+                    backgroundColor: stationColor(station.waterLevel || 0) 
+                  }]} />
+                </View>
+
+                {/* Station Stats */}
+                <View style={styles.stationStats}>
+                  <View style={styles.statItem}>
+                    <Ionicons name="water" size={16} color="#2563eb" />
+                    <Text style={styles.statLabel}>Level</Text>
+                    <Text style={styles.statValue}>{station.waterLevel || 0}m</Text>
+                  </View>
+                  
+                  <View style={styles.statItem}>
+                    <Ionicons name="layers" size={16} color="#059669" />
+                    <Text style={styles.statLabel}>Aquifer</Text>
+                    <Text style={styles.statValue}>{station.aquiferType}</Text>
+                  </View>
+                  
+                  <View style={styles.statItem}>
+                    <Ionicons name="analytics" size={16} color="#7c3aed" />
+                    <Text style={styles.statLabel}>Status</Text>
+                    <Text style={[styles.statValue, { 
+                      color: getAvailabilityColor(station.gwAvailability) 
+                    }]}>{station.gwAvailability}</Text>
+                  </View>
+                </View>
+
+                {/* Water Quality Indicators */}
+                <View style={styles.qualityIndicators}>
+                  <View style={styles.stationQualityItem}>
+                    <Text style={styles.stationQualityLabel}>pH: {station.quality?.ph || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.stationQualityItem}>
+                    <Text style={styles.stationQualityLabel}>TDS: {station.quality?.tds || 'N/A'} ppm</Text>
+                  </View>
+                  <View style={styles.stationQualityItem}>
+                    <Text style={[styles.stationQualityLabel, {
+                      color: station.quality?.salinity === 'Fresh' ? '#22c55e' : 
+                             station.quality?.salinity === 'Brackish' ? '#f59e0b' : '#ef4444'
+                    }]}>
+                      {station.quality?.salinity || 'N/A'}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Action Button */}
+                <Pressable 
+                  style={styles.detailsButton}
+                  onPress={() => {
+                    console.log('Station details:', station);
+                    // Here you could open a detailed view
+                  }}
+                >
+                  <Text style={styles.detailsButtonText}>View Details</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#2563eb" />
+                </Pressable>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
+        {/* Summary Stats */}
+        <View style={styles.summaryContainer}>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryValue}>{filteredStations.length}</Text>
+            <Text style={styles.summaryLabel}>Total Stations</Text>
+          </View>
+          <View style={styles.summaryItem}>
+            <Text style={[styles.summaryValue, { color: '#ef4444' }]}>
+              {filteredStations.filter(s => (s.waterLevel || 0) < 2).length}
+            </Text>
+            <Text style={styles.summaryLabel}>Critical</Text>
+          </View>
+          <View style={styles.summaryItem}>
+            <Text style={[styles.summaryValue, { color: '#22c55e' }]}>
+              {filteredStations.filter(s => (s.waterLevel || 0) >= 4).length}
+            </Text>
+            <Text style={styles.summaryLabel}>Good</Text>
+          </View>
+        </View>
       </View>
     );
   }
@@ -523,6 +932,12 @@ const MapScreen = () => {
         showsScale
         showsCompass
         loadingEnabled
+        onRegionChangeComplete={(region) => {
+          // Track zoom level - smaller deltas mean more zoomed in
+          const zoomLevel = Math.log2(360 / region.latitudeDelta);
+          setCurrentZoom(zoomLevel);
+          // You can use isZoomedIn state for conditional rendering if needed
+        }}
         onPress={() => {
           // Dismiss open panels when tapping on empty map space
           if (showFilterPanel) setShowFilterPanel(false);
@@ -613,8 +1028,20 @@ const MapScreen = () => {
           );
         })}
 
-        {/* Stations */}
-        {showStations && Array.isArray(filteredStations) && filteredStations.map(renderStation).filter(Boolean)}
+        {/* Test marker for Visakhapatnam */}
+        <Marker
+          coordinate={{ latitude: 17.6868, longitude: 83.2185 }}
+          pinColor="red"
+          title="Test DWLR Station"
+          description="Visakhapatnam Test Station"
+        />
+
+        {/* Stations - Debug version with console logging */}
+        {showStations && Array.isArray(filteredStations) && (() => {
+          console.log('Rendering stations:', filteredStations.length, 'stations');
+          console.log('First station:', filteredStations[0]);
+          return filteredStations.map(renderStation).filter(Boolean);
+        })()}
 
         {/* Trend Layer (approx heat spots) */}
         {showTrend && Array.isArray(filteredStations) && filteredStations.map(st => {
@@ -1023,21 +1450,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#f1f3f5',
   },
-  calloutHeader: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center',
-    marginBottom: 12,
-    paddingBottom: 8,
+  calloutHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
+    borderBottomColor: '#f3f4f6',
+    backgroundColor: '#f8fafc',
   },
   calloutTitle: { 
-    fontWeight: '800', 
-    fontSize: 17,
-    color: '#212529',
-    flex: 1,
-    letterSpacing: -0.2,
+    fontWeight: '700', 
+    fontSize: 16,
+    color: '#111827',
+    marginBottom: 2,
+    letterSpacing: -0.3,
   },
   calloutText: {
     fontSize: 14,
@@ -1593,6 +2021,535 @@ const styles = StyleSheet.create({
     fontSize: 15, 
     fontWeight: '800',
     textAlign: 'center',
+  },
+  
+  // Enhanced DWLR Station Callout Styles
+  enhancedCallout: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 0,
+    width: 280,
+    maxHeight: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    overflow: 'hidden',
+  },
+  
+  stationTitleContainer: {
+    flex: 1,
+  },
+  
+  stationId: {
+    fontSize: 11,
+    color: '#6b7280',
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  
+  statisticsSection: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+  },
+  
+  sectionTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  
+  sectionTitleText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#374151',
+    marginLeft: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  
+  levelStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  
+  levelItem: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    borderRadius: 6,
+  },
+  
+  levelValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 1,
+  },
+  
+  levelLabel: {
+    fontSize: 9,
+    color: '#6b7280',
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    marginBottom: 1,
+  },
+  
+  levelCategory: {
+    fontSize: 8,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  
+  aquiferInfo: {
+    backgroundColor: '#f0fdf4',
+    borderRadius: 8,
+    padding: 8,
+  },
+  
+  aquiferItem: {
+    marginBottom: 6,
+  },
+  
+  aquiferType: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#059669',
+    marginBottom: 1,
+  },
+  
+  aquiferDescription: {
+    fontSize: 10,
+    color: '#374151',
+    fontStyle: 'italic',
+  },
+  
+  aquiferProperties: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  
+  propertyItem: {
+    flex: 1,
+  },
+  
+  propertyLabel: {
+    fontSize: 9,
+    color: '#6b7280',
+    fontWeight: '500',
+    textTransform: 'uppercase',
+  },
+  
+  propertyValue: {
+    fontSize: 11,
+    color: '#059669',
+    fontWeight: '600',
+  },
+  
+  availabilityInfo: {
+    backgroundColor: '#faf5ff',
+    borderRadius: 8,
+    padding: 8,
+  },
+  
+  availabilityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  
+  availabilityLabel: {
+    fontSize: 11,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  
+  availabilityBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  
+  availabilityText: {
+    fontSize: 10,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  
+  qualityMetrics: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 6,
+  },
+  
+  qualityItem: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    paddingVertical: 4,
+    paddingHorizontal: 3,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  
+  qualityLabel: {
+    fontSize: 8,
+    color: '#6b7280',
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    marginBottom: 1,
+  },
+  
+  qualityValue: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  
+  trendSection: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: '#f9fafb',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  
+  trendLabel: {
+    fontSize: 10,
+    color: '#6b7280',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    fontWeight: '400',
+  },
+  
+  enhancedFocusButton: {
+    backgroundColor: '#2563eb',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    gap: 6,
+    shadowColor: '#2563eb',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  
+  enhancedFocusButtonText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+
+  // New monitoring status styles
+  monitoringInfo: {
+    backgroundColor: '#fff',
+    borderRadius: 6,
+    padding: 10,
+  },
+
+  statusItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+
+  statusIndicator: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+
+  statusText: {
+    fontSize: 10,
+    color: '#059669',
+    fontWeight: '500',
+  },
+
+  lastUpdateText: {
+    fontSize: 10,
+    color: '#6b7280',
+    marginLeft: 4,
+  },
+
+  signalText: {
+    fontSize: 10,
+    color: '#059669',
+    marginLeft: 4,
+  },
+
+  // Assessment styles
+  assessmentInfo: {
+    backgroundColor: '#fff',
+    borderRadius: 6,
+    padding: 10,
+  },
+
+  riskItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+
+  riskLabel: {
+    fontSize: 10,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+
+  riskValue: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+
+  recommendationText: {
+    fontSize: 9,
+    color: '#374151',
+    fontStyle: 'italic',
+    marginTop: 6,
+    padding: 6,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 4,
+    textAlign: 'center',
+  },
+
+  // Action buttons
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    gap: 6,
+  },
+
+  calloutActionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    gap: 4,
+  },
+
+  primaryButton: {
+    backgroundColor: '#2563eb',
+  },
+
+  secondaryButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#2563eb',
+  },
+
+  calloutActionButtonText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#fff',
+  },
+
+  // Expo Go / Web fallback styles
+  expoGoHeader: {
+    backgroundColor: '#2563eb',
+    padding: 20,
+    alignItems: 'center',
+  },
+
+  expoGoTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+
+  expoGoSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+
+  filterContainer: {
+    flexDirection: 'row',
+    padding: 16,
+    gap: 12,
+    backgroundColor: '#f8fafc',
+  },
+
+  filterButton: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+  },
+
+  filterButtonActive: {
+    backgroundColor: '#2563eb',
+    borderColor: '#2563eb',
+  },
+
+  filterText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+
+  filterTextActive: {
+    color: '#ffffff',
+  },
+
+  stationsList: {
+    flex: 1,
+    backgroundColor: '#f1f5f9',
+  },
+
+  stationCard: {
+    backgroundColor: '#ffffff',
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+
+  stationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+
+  stationTitleSection: {
+    flex: 1,
+  },
+
+  stationCardName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1f2937',
+    marginBottom: 2,
+  },
+
+  stationCardId: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+
+  stationStatusIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+
+  stationStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+
+  statLabel: {
+    fontSize: 10,
+    color: '#6b7280',
+    marginTop: 4,
+    marginBottom: 2,
+  },
+
+  statValue: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#374151',
+  },
+
+  qualityIndicators: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    paddingHorizontal: 8,
+  },
+
+  stationQualityItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+
+  stationQualityLabel: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#374151',
+  },
+
+  detailsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#2563eb',
+    gap: 4,
+  },
+
+  detailsButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#2563eb',
+  },
+
+  summaryContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#ffffff',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+  },
+
+  summaryItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+
+  summaryValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#2563eb',
+    marginBottom: 2,
+  },
+
+  summaryLabel: {
+    fontSize: 12,
+    color: '#6b7280',
+    fontWeight: '500',
   },
 });
 
