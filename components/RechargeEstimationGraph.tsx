@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from "react";
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -60,16 +61,16 @@ const RechargeEstimationGraph = () => {
       { x: 4, label: "Q4", y: 4.7, type: "future" },
     ],
     "3Y": [
-      { x: 1, label: "2023", y: 3.0, type: "past" },
-      { x: 2, label: "2024", y: 4.2, type: "current" },
-      { x: 3, label: "2025", y: 5.1, type: "future" },
+      { x: 1, label: "2024", y: 3.0, type: "past" },
+      { x: 2, label: "2025", y: 4.2, type: "current" },
+      { x: 3, label: "2026", y: 5.1, type: "future" },
     ],
     "5Y": [
-      { x: 1, label: "2021", y: 2.5, type: "past" },
-      { x: 2, label: "2022", y: 3.2, type: "past" },
-      { x: 3, label: "2023", y: 4.0, type: "past" },
-      { x: 4, label: "2024", y: 4.8, type: "current" },
-      { x: 5, label: "2025", y: 6.0, type: "future" },
+      { x: 1, label: "2024", y: 2.5, type: "past" },
+      { x: 2, label: "2025", y: 3.2, type: "current" },
+      { x: 3, label: "2026", y: 4.0, type: "future" },
+      { x: 4, label: "2027", y: 4.8, type: "future" },
+      { x: 5, label: "2028", y: 6.0, type: "future" },
     ],
   };
 
@@ -91,7 +92,7 @@ const RechargeEstimationGraph = () => {
   };
 
   const scaleX = (value: number) => {
-    const padding = 15; // Add padding to prevent edge cutoff
+    const padding = 20; // Increased padding for better data arrangement
     const availableWidth = chartWidth - (padding * 2);
     return padding + ((value - 1) / (currentData.length - 1)) * availableWidth;
   };
@@ -128,7 +129,15 @@ const RechargeEstimationGraph = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>Recharge Estimation - {range}</Text>
+          <View style={styles.titleRow}>
+            <MaterialCommunityIcons 
+              name="chart-line" 
+              size={24} 
+              color="#059669" 
+              style={styles.titleIcon}
+            />
+            <Text style={styles.title}>Recharge Estimation - {range}</Text>
+          </View>
         </View>
         <View style={styles.legend}>
           <View style={styles.legendItem}>
@@ -169,7 +178,7 @@ const RechargeEstimationGraph = () => {
             {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
               <Path
                 key={`grid-${i}`}
-                d={`M 15 ${chartHeight * ratio} L ${chartWidth - 15} ${chartHeight * ratio}`}
+                d={`M 20 ${chartHeight * ratio} L ${chartWidth - 20} ${chartHeight * ratio}`}
                 stroke="#F3F4F6"
                 strokeWidth={1}
               />
@@ -219,7 +228,7 @@ const RechargeEstimationGraph = () => {
                   radius = 4;
                   break;
                 case 'current':
-                  fill = "#059669";
+                  fill = "#3B82F6"; // Changed to blue color
                   stroke = "#fff";
                   strokeWidth = 3;
                   radius = 7;
@@ -249,14 +258,26 @@ const RechargeEstimationGraph = () => {
           {/* X-axis labels */}
           <View style={styles.xAxis}>
             {currentData.map((point, index) => {
+              // Show every other label for longer ranges, all labels for shorter ranges
+              const shouldShow = currentData.length <= 4 || index % 2 === 0 || index === currentData.length - 1;
+              if (!shouldShow) return null;
+              
               const xPosition = scaleX(point.x);
-              const labelWidth = 40;
-              const adjustedLeft = Math.max(0, Math.min(chartWidth - labelWidth, xPosition - labelWidth / 2));
+              const labelWidth = 30; // Reduced label width for better alignment
+              const adjustedLeft = Math.max(5, Math.min(chartWidth - labelWidth - 5, xPosition - labelWidth / 2));
               
               return (
                 <Text 
                   key={`label-${index}`} 
-                  style={[styles.xAxisLabel, { left: adjustedLeft, width: labelWidth }]}
+                  style={[styles.xAxisLabel, { 
+                    left: adjustedLeft, 
+                    width: labelWidth,
+                    color: '#666666', // Explicit dark color
+                    backgroundColor: 'rgba(255,255,255,0.9)', // More opaque background
+                    borderRadius: 3, // Smaller border radius
+                    paddingVertical: 1, // Reduced padding
+                    paddingHorizontal: 2,
+                  }]}
                 >
                   {point.label}
                 </Text>
@@ -328,24 +349,29 @@ const RechargeEstimationGraph = () => {
 
 const styles = StyleSheet.create({
   container: { 
-    padding: 20, 
+    padding: 0, // Removed padding to start content from left margin
+    paddingTop: 15, // Add top margin
+    paddingBottom: 25, // Add more bottom padding for X-axis labels
     backgroundColor: "#fff", 
-    borderRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 5,
-    marginBottom: 20,
+    borderRadius: 12, // Match GroundwaterChart border radius
+    marginBottom: 16, // Match GroundwaterChart margin
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.2)"
   },
   header: {
     flexDirection: "column",
-    marginBottom: 20
+    marginBottom: 15, // Reduced margin for compact layout
+    paddingHorizontal: 20 // Add horizontal padding for text content
   },
   titleContainer: {
     marginBottom: 12
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center"
+  },
+  titleIcon: {
+    marginRight: 8
   },
   title: { 
     fontSize: 20, 
@@ -375,9 +401,9 @@ const styles = StyleSheet.create({
   },
   chartContainer: {
     flexDirection: 'row',
-    height: chartHeight + 50, // Extra space for x-axis labels
-    marginBottom: 20,
-    overflow: 'hidden' // Prevent content overflow
+    height: chartHeight + 40, // More space for X-axis labels
+    marginBottom: 5, // Minimal margin
+    // Removed overflow: 'hidden' to allow labels to be visible
   },
   yAxis: {
     width: yAxisWidth,
@@ -401,22 +427,25 @@ const styles = StyleSheet.create({
   },
   xAxis: {
     position: 'absolute',
-    bottom: -35,
+    bottom: -10, // Move closer to prevent overlap with range selector
     left: 0,
     right: 0,
-    height: 30
+    height: 20, // Reduced height for compact layout
   },
   xAxisLabel: {
     position: 'absolute',
-    fontSize: 11,
+    fontSize: 11, // Slightly smaller font for compact layout
     color: '#6B7280',
-    textAlign: 'center'
+    textAlign: 'center',
+    fontWeight: '600', // Made bolder for better visibility
   },
   rangeSelector: {
     flexDirection: "row",
     justifyContent: "space-between",
     flexWrap: "nowrap",
-    marginBottom: 20,
+    marginTop: 25, // Increase top margin to prevent overlap with X-axis
+    marginBottom: 15, // Reduced margin for compact layout
+    marginHorizontal: 20, // Add horizontal margin for button container
     backgroundColor: "#F8FAFC",
     borderRadius: 12,
     padding: 6,
@@ -477,8 +506,8 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 12,
     backgroundColor: "#F8FAFC",
-    marginHorizontal: -20,
-    marginBottom: -20,
+    marginHorizontal: 0, // Changed from -20 since container padding is now 0
+    marginBottom: 0, // Changed from -20 since container padding is now 0  
     paddingHorizontal: 20,
     paddingBottom: 20,
     borderBottomLeftRadius: 20,

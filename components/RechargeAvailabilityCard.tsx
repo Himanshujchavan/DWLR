@@ -161,13 +161,15 @@ const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 20,
-    padding: 20,
+    padding: 0, // Removed padding to start content from left margin
     borderWidth: 1,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
+    paddingHorizontal: 20, // Add horizontal padding for header content
+    paddingTop: 20, // Add top padding since container padding was removed
   },
   iconContainer: {
     width: 40,
@@ -185,9 +187,11 @@ const styles = StyleSheet.create({
   cardSubtitle: {
     fontSize: 14,
     marginBottom: 20,
+    paddingHorizontal: 20, // Add horizontal padding for subtitle
   },
   rechargeList: {
     marginBottom: 16,
+    paddingHorizontal: 20, // Add horizontal padding for list content
   },
   rechargeRow: {
     flexDirection: 'row',
@@ -236,6 +240,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     marginBottom: 20,
+    marginHorizontal: 20, // Add horizontal margin for button
   },
   viewMoreText: {
     fontSize: 14,
@@ -246,6 +251,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.1)',
     paddingTop: 16,
+    paddingHorizontal: 20, // Add horizontal padding for summary content
+    paddingBottom: 20, // Add bottom padding since container padding was removed
   },
   summaryRow: {
     flexDirection: 'row',

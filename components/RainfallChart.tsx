@@ -115,10 +115,11 @@ export default function RainfallChart({ variant = 'light' }: { variant?: Variant
 const styles = StyleSheet.create({
   container: {
     borderRadius: 12,
-    padding: 16,
+    padding: 0, // Removed padding to start content from left margin
   },
   chartHeader: {
     marginBottom: 16,
+    paddingHorizontal: 16, // Add horizontal padding for header content
   },
   chartTitle: {
     fontSize: 16,
@@ -191,6 +192,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     marginTop: 16,
     paddingTop: 16,
+    paddingHorizontal: 16, // Add horizontal padding for legend content
     borderTopWidth: 1,
   },
   legendItem: {
