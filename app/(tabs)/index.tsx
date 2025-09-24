@@ -1,6 +1,7 @@
 import GroundwaterChart from '@/components/GroundwaterChart';
 import RainfallChart from '@/components/RainfallChart';
 import RechargeAvailabilityCard from '@/components/RechargeAvailabilityCard';
+import RechargeEstimationGraph from '@/components/RechargeEstimationGraph';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
@@ -218,6 +219,11 @@ export default function HomeScreen() {
               <GroundwaterChart variant={colorScheme === 'light' ? 'light' : 'dark'} />
             </View>
           </ThemedView>
+        </View>
+
+        {/* Modern Recharge Estimation Graph */}
+        <View onLayout={setOffset('recharge-graph')}>
+          <RechargeEstimationGraph />
         </View>
 
         <View onLayout={setOffset('recharge')}>
