@@ -45,18 +45,39 @@ export const Colors = {
     rechargeOverlay: 'rgba(34, 197, 94, 0.1)',
   },
   dark: {
+    // Core colors
     text: '#ECEDEE',
+    textSecondary: '#9BA1A6',
     background: '#151718',
+    backgroundSoft: '#1F2937',
+    
+    // Theme colors
     tint: tintColorDark,
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
     
-    // Keep existing dark theme colors for consistency
+    // Water monitoring specific colors
     primary: '#64b5f6',
+    primaryDark: '#42a5f5',
     secondary: '#22d3ee',
+    
+    // Alert/Status colors
     statusLow: '#ff4444',
     statusMedium: '#ff8800', 
     statusHigh: '#44aa44',
+    
+    // UI element colors
+    cardBackground: '#1F2937',
+    cardBorder: '#374151',
+    cardShadow: 'rgba(0, 0, 0, 0.3)',
+    buttonPrimary: '#64b5f6',
+    buttonSecondary: '#374151',
+    buttonSecondaryBorder: '#64b5f6',
+    
+    // Accent colors for charts and gradients
+    chartGradientStart: '#64b5f6',
+    chartGradientEnd: '#42a5f5',
+    rechargeOverlay: 'rgba(68, 170, 68, 0.2)',
   },
 };

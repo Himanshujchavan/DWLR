@@ -1,6 +1,8 @@
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Svg, { Circle, Defs, Path, Stop, LinearGradient as SvgLinearGradient } from 'react-native-svg';
 
@@ -23,6 +25,23 @@ const chartHeight = 180;
 
 const RechargeEstimationGraph = () => {
   const [range, setRange] = useState<TimeRange>("1W");
+  const colorScheme = useColorScheme();
+  
+  // Theme-aware colors - memoized for performance
+  const themeColors = useMemo(() => ({
+    background: colorScheme === 'light' ? Colors.light.background : Colors.dark.background,
+    text: colorScheme === 'light' ? Colors.light.text : Colors.dark.text,
+    textSecondary: colorScheme === 'light' ? Colors.light.textSecondary : Colors.dark.textSecondary,
+    cardBackground: colorScheme === 'light' ? Colors.light.cardBackground : Colors.dark.cardBackground,
+    cardBorder: colorScheme === 'light' ? Colors.light.cardBorder : Colors.dark.cardBorder,
+    primary: colorScheme === 'light' ? Colors.light.primary : Colors.dark.primary,
+    secondary: colorScheme === 'light' ? Colors.light.secondary : Colors.dark.secondary,
+    statusHigh: colorScheme === 'light' ? Colors.light.statusHigh : Colors.dark.statusHigh,
+    gridLine: colorScheme === 'light' ? '#F3F4F6' : '#374151',
+    rangeSelector: colorScheme === 'light' ? Colors.light.backgroundSoft : Colors.dark.backgroundSoft,
+    statsBackground: colorScheme === 'light' ? Colors.light.backgroundSoft : Colors.dark.backgroundSoft,
+    statsBorder: colorScheme === 'light' ? Colors.light.cardBorder : Colors.dark.cardBorder,
+  }), [colorScheme]);
 
   // Enhanced dataset with past, current, and future data
   const dataSets: Record<TimeRange, DataPoint[]> = {
@@ -126,31 +145,31 @@ const RechargeEstimationGraph = () => {
   const futureLine = currentPoint && futureData.length > 0 ? [currentPoint, ...futureData] : futureData;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.cardBackground, borderColor: themeColors.cardBorder }]}>
       <View style={styles.header}>
         <View style={styles.titleContainer}>
           <View style={styles.titleRow}>
             <MaterialCommunityIcons 
               name="chart-line" 
               size={24} 
-              color="#059669" 
+              color={themeColors.secondary} 
               style={styles.titleIcon}
             />
-            <Text style={styles.title}>Recharge Estimation - {range}</Text>
+            <Text style={[styles.title, { color: themeColors.text }]}>Recharge Estimation - {range}</Text>
           </View>
         </View>
         <View style={styles.legend}>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: "#64748B" }]} />
-            <Text style={styles.legendText}>Past</Text>
+            <View style={[styles.legendDot, { backgroundColor: themeColors.textSecondary }]} />
+            <Text style={[styles.legendText, { color: themeColors.textSecondary }]}>Past</Text>
           </View>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: "#059669" }]} />
-            <Text style={styles.legendText}>Current</Text>
+            <View style={[styles.legendDot, { backgroundColor: themeColors.secondary }]} />
+            <Text style={[styles.legendText, { color: themeColors.textSecondary }]}>Current</Text>
           </View>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: "#10B981" }]} />
-            <Text style={styles.legendText}>Future</Text>
+            <View style={[styles.legendDot, { backgroundColor: themeColors.statusHigh }]} />
+            <Text style={[styles.legendText, { color: themeColors.textSecondary }]}>Future</Text>
           </View>
         </View>
       </View>
@@ -159,9 +178,9 @@ const RechargeEstimationGraph = () => {
       <View style={styles.chartContainer}>
         {/* Y-axis labels */}
         <View style={styles.yAxis}>
-          <Text style={styles.yAxisLabel}>{maxY.toFixed(1)}m</Text>
-          <Text style={styles.yAxisLabel}>{((maxY + minY) / 2).toFixed(1)}m</Text>
-          <Text style={styles.yAxisLabel}>{minY.toFixed(1)}m</Text>
+          <Text style={[styles.yAxisLabel, { color: themeColors.textSecondary }]}>{maxY.toFixed(1)}m</Text>
+          <Text style={[styles.yAxisLabel, { color: themeColors.textSecondary }]}>{((maxY + minY) / 2).toFixed(1)}m</Text>
+          <Text style={[styles.yAxisLabel, { color: themeColors.textSecondary }]}>{minY.toFixed(1)}m</Text>
         </View>
 
         {/* SVG Chart */}
@@ -169,8 +188,8 @@ const RechargeEstimationGraph = () => {
           <Svg width={chartWidth} height={chartHeight} style={styles.svg}>
             <Defs>
               <SvgLinearGradient id="futureGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <Stop offset="0%" stopColor="#10B981" stopOpacity={0.3} />
-                <Stop offset="100%" stopColor="#10B981" stopOpacity={0.1} />
+                <Stop offset="0%" stopColor={themeColors.statusHigh} stopOpacity={0.3} />
+                <Stop offset="100%" stopColor={themeColors.statusHigh} stopOpacity={0.1} />
               </SvgLinearGradient>
             </Defs>
 
@@ -179,7 +198,7 @@ const RechargeEstimationGraph = () => {
               <Path
                 key={`grid-${i}`}
                 d={`M 20 ${chartHeight * ratio} L ${chartWidth - 20} ${chartHeight * ratio}`}
-                stroke="#F3F4F6"
+                stroke={themeColors.gridLine}
                 strokeWidth={1}
               />
             ))}
@@ -206,7 +225,7 @@ const RechargeEstimationGraph = () => {
             {futureLine.length > 1 && (
               <Path
                 d={createDashedPath(futureLine)}
-                stroke="#10B981"
+                stroke={themeColors.statusHigh}
                 strokeWidth={3}
                 strokeDasharray="10,5"
                 fill="none"
@@ -223,19 +242,19 @@ const RechargeEstimationGraph = () => {
               switch (point.type) {
                 case 'past':
                   fill = "#64748B";
-                  stroke = "#374151";
+                  stroke = colorScheme === 'light' ? "#374151" : "#9CA3AF";
                   strokeWidth = 2;
                   radius = 4;
                   break;
                 case 'current':
-                  fill = "#3B82F6"; // Changed to blue color
-                  stroke = "#fff";
+                  fill = themeColors.primary;
+                  stroke = colorScheme === 'light' ? "#fff" : themeColors.cardBackground;
                   strokeWidth = 3;
                   radius = 7;
                   break;
                 case 'future':
-                  fill = "#10B981";
-                  stroke = "#fff";
+                  fill = themeColors.statusHigh;
+                  stroke = colorScheme === 'light' ? "#fff" : themeColors.cardBackground;
                   strokeWidth = 2;
                   radius = 4;
                   break;
@@ -272,10 +291,10 @@ const RechargeEstimationGraph = () => {
                   style={[styles.xAxisLabel, { 
                     left: adjustedLeft, 
                     width: labelWidth,
-                    color: '#666666', // Explicit dark color
-                    backgroundColor: 'rgba(255,255,255,0.9)', // More opaque background
-                    borderRadius: 3, // Smaller border radius
-                    paddingVertical: 1, // Reduced padding
+                    color: themeColors.textSecondary,
+                    backgroundColor: colorScheme === 'light' ? 'rgba(255,255,255,0.9)' : 'rgba(31,41,55,0.9)',
+                    borderRadius: 3,
+                    paddingVertical: 1,
                     paddingHorizontal: 2,
                   }]}
                 >
@@ -288,7 +307,7 @@ const RechargeEstimationGraph = () => {
       </View>
 
       {/* Time Range Selector */}
-      <View style={styles.rangeSelector}>
+      <View style={[styles.rangeSelector, { backgroundColor: themeColors.rangeSelector }]}>
         {(["1W", "1M", "3M", "6M", "1Y", "3Y", "5Y"] as TimeRange[]).map((r) => (
           <TouchableOpacity 
             key={r} 
@@ -301,7 +320,7 @@ const RechargeEstimationGraph = () => {
           >
             {range === r ? (
               <LinearGradient
-                colors={['#10B981', '#059669']}
+                colors={[themeColors.statusHigh, themeColors.secondary]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.activeButtonGradient}
@@ -312,7 +331,7 @@ const RechargeEstimationGraph = () => {
               </LinearGradient>
             ) : (
               <View style={styles.inactiveButton}>
-                <Text style={styles.rangeText}>
+                <Text style={[styles.rangeText, { color: themeColors.textSecondary }]}>
                   {r}
                 </Text>
               </View>
@@ -322,22 +341,22 @@ const RechargeEstimationGraph = () => {
       </View>
 
       {/* Statistics */}
-      <View style={styles.statsContainer}>
+      <View style={[styles.statsContainer, { backgroundColor: themeColors.statsBackground, borderColor: themeColors.statsBorder }]}>
         <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Current</Text>
-          <Text style={styles.statValue}>
+          <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>Current</Text>
+          <Text style={[styles.statValue, { color: themeColors.primary }]}>
             {currentPoint ? `${currentPoint.y}m` : 'N/A'}
           </Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Projected Peak</Text>
-          <Text style={styles.statValue}>
+          <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>Projected Peak</Text>
+          <Text style={[styles.statValue, { color: themeColors.statusHigh }]}>
             {futureData.length > 0 ? `${Math.max(...futureData.map(d => d.y))}m` : 'N/A'}
           </Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Growth Trend</Text>
-          <Text style={[styles.statValue, { color: "#10B981" }]}>
+          <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>Growth Trend</Text>
+          <Text style={[styles.statValue, { color: themeColors.secondary }]}>
             {futureData.length > 0 && currentPoint ? 
               `+${((Math.max(...futureData.map(d => d.y)) - currentPoint.y) / currentPoint.y * 100).toFixed(1)}%` : 'N/A'}
           </Text>
@@ -352,11 +371,9 @@ const styles = StyleSheet.create({
     padding: 0, // Removed padding to start content from left margin
     paddingTop: 15, // Add top margin
     paddingBottom: 25, // Add more bottom padding for X-axis labels
-    backgroundColor: "#fff", 
     borderRadius: 12, // Match GroundwaterChart border radius
     marginBottom: 16, // Match GroundwaterChart margin
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)"
   },
   header: {
     flexDirection: "column",
@@ -376,7 +393,6 @@ const styles = StyleSheet.create({
   title: { 
     fontSize: 20, 
     fontWeight: "700", 
-    color: "#0F172A",
     letterSpacing: -0.5
   },
   legend: {
@@ -397,7 +413,6 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 11,
-    color: "#6B7280"
   },
   chartContainer: {
     flexDirection: 'row',
@@ -414,7 +429,6 @@ const styles = StyleSheet.create({
   },
   yAxisLabel: {
     fontSize: 11,
-    color: '#6B7280',
     textAlign: 'right'
   },
   svgContainer: {
@@ -435,7 +449,6 @@ const styles = StyleSheet.create({
   xAxisLabel: {
     position: 'absolute',
     fontSize: 11, // Slightly smaller font for compact layout
-    color: '#6B7280',
     textAlign: 'center',
     fontWeight: '600', // Made bolder for better visibility
   },
@@ -446,7 +459,6 @@ const styles = StyleSheet.create({
     marginTop: 25, // Increase top margin to prevent overlap with X-axis
     marginBottom: 15, // Reduced margin for compact layout
     marginHorizontal: 20, // Add horizontal margin for button container
-    backgroundColor: "#F8FAFC",
     borderRadius: 12,
     padding: 6,
     shadowColor: "#000",
@@ -486,7 +498,6 @@ const styles = StyleSheet.create({
   },
   rangeText: { 
     fontSize: 11, 
-    color: "#64748B",
     fontWeight: "600",
     textAlign: "center"
   },
@@ -502,12 +513,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: "#E2E8F0",
     flexWrap: "wrap",
     gap: 12,
-    backgroundColor: "#F8FAFC",
-    marginHorizontal: 0, // Changed from -20 since container padding is now 0
-    marginBottom: 0, // Changed from -20 since container padding is now 0  
+    marginHorizontal: 0,
+    marginBottom: 0,
     paddingHorizontal: 20,
     paddingBottom: 20,
     borderBottomLeftRadius: 20,
@@ -521,14 +530,12 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: "#64748B",
     marginBottom: 6,
     fontWeight: "500"
   },
   statValue: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1E293B",
     textAlign: "center"
   }
 });
