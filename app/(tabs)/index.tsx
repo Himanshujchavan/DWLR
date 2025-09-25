@@ -142,6 +142,10 @@ export default function HomeScreen() {
             color: colorScheme === 'light' ? Colors.light.text : '#ffffff',
             fontWeight: '700',
           }]}>7.8 M</ThemedText>
+          <ThemedText style={[styles.heroLocation, { 
+            color: colorScheme === 'light' ? Colors.light.textSecondary : 'rgba(255,255,255,0.8)',
+            fontWeight: '500',
+          }]}>Location: Mumbai</ThemedText>
           <View style={styles.heroMetrics}>
             <View style={styles.metricItem}>
               <ThemedText style={[styles.metricValue, {
@@ -151,7 +155,7 @@ export default function HomeScreen() {
               <ThemedText style={[styles.metricLabel, { 
                 color: colorScheme === 'light' ? Colors.light.textSecondary : 'rgba(255,255,255,0.8)',
                 fontWeight: '600',
-              }]}>in 15 days</ThemedText>
+              }]}>Recharge in 15 days</ThemedText>
             </View>
             <View style={[styles.metricDivider, { 
               backgroundColor: colorScheme === 'light' ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.3)',
@@ -416,13 +420,23 @@ const styles = StyleSheet.create({
   heroValue: {
     fontSize: 50,
     fontWeight: '700',
-    marginBottom: 24,
+    marginBottom: 8,
     textAlign: 'center',
     lineHeight: 64,
     letterSpacing: -1,
     textShadowColor: 'rgba(0, 0, 0, 0.4)',
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 4,
+  },
+  heroLocation: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 20,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   heroMetrics: {
     flexDirection: 'row',

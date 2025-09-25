@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -13,7 +13,7 @@ const alertsData = [
     title: 'Critical Water Level Drop',
     message: 'Water level at Mumbai Suburban station has dropped below critical threshold (8.5m)',
     timestamp: '2 minutes ago',
-    location: 'Mumbai Suburban - DWLR002',
+    location: 'Mumbai Suburban - DWLR001',
   },
   {
     id: 2,
@@ -21,7 +21,7 @@ const alertsData = [
     title: 'High TDS Detected',
     message: 'Total Dissolved Solids level exceeded 500 ppm at Pune Central monitoring station',
     timestamp: '15 minutes ago',
-    location: 'Pune Central - DWLR001',
+    location: 'Mumbai Suburban - DWLR001',
   },
   {
     id: 3,
@@ -29,7 +29,7 @@ const alertsData = [
     title: 'Thunderstorm Alert',
     message: 'Orange alert for thunderstorms in the region. Expected rainfall: 50-100mm',
     timestamp: '1 hour ago',
-    location: 'Regional Weather Service',
+    location: 'Mumbai Suburban - DWLR001',
   },
   {
     id: 4,
@@ -37,7 +37,7 @@ const alertsData = [
     title: 'System Maintenance',
     message: 'Scheduled maintenance for monitoring equipment at Nashik Agricultural station',
     timestamp: '3 hours ago',
-    location: 'Nashik Agricultural - DWLR003',
+    location: 'Mumbai Suburban - DWLR001',
   },
   {
     id: 5,
@@ -45,35 +45,18 @@ const alertsData = [
     title: 'Extraction Rate High',
     message: 'Water extraction rate 15% above normal for current season',
     timestamp: '6 hours ago',
-    location: 'Aurangabad Industrial - DWLR004',
+    location: 'Mumbai Suburban - DWLR001',
   },
 ];
 
 export default function AlertsScreen() {
   const colorScheme = useColorScheme();
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
 
   // Dynamic colors based on theme
   const containerBg = colorScheme === 'light' ? Colors.light.background : '#1a1a2e';
   const heroBg = colorScheme === 'light' ? Colors.light.backgroundSoft : '#16213e';
   const heroValueColor = colorScheme === 'light' ? Colors.light.text : '#ffffff';
   const heroPillBg = colorScheme === 'light' ? Colors.light.primary : '#f59e42';
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [fadeAnim, slideAnim]);
 
   return (
     <View style={[styles.container, { backgroundColor: containerBg }]}>
@@ -101,47 +84,6 @@ export default function AlertsScreen() {
 
 function AlertCard({ alert, index }: { alert: any; index: number }) {
   const colorScheme = useColorScheme();
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.95)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    // Staggered entrance animation
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        delay: index * 150,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 500,
-        delay: index * 150,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // Pulse animation for critical alerts
-    if (alert.type === 'critical') {
-      const pulse = Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.02,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      pulse.start();
-      return () => pulse.stop();
-    }
-  }, [alert.type, index, fadeAnim, scaleAnim, pulseAnim]);
 
   const getAlertConfig = (type: string) => {
     const lightColors = {
@@ -167,20 +109,12 @@ function AlertCard({ alert, index }: { alert: any; index: number }) {
   const config = getAlertConfig(alert.type);
 
   return (
-    <Animated.View
-      style={[
-        styles.cardShadow,
-        {
-          opacity: fadeAnim,
-          transform: [{ scale: scaleAnim }, { scale: pulseAnim }],
-        },
-      ]}
-    >
+    <View style={styles.cardShadow}>
       <ThemedView style={[
         styles.card,
         {
           backgroundColor: colorScheme === 'light' ? Colors.light.cardBackground : '#16213e',
-          borderColor: colorScheme === 'light' ? Colors.light.cardBorder : 'rgba(255,255,255,0.1)',
+          borderColor: colorScheme === 'light' ? '#9ca3af' : '#374151',
         }
       ]}>
         <View style={styles.cardHeader}>
@@ -191,34 +125,49 @@ function AlertCard({ alert, index }: { alert: any; index: number }) {
             <Text style={styles.severityText}>{alert.type.toUpperCase()}</Text>
           </View>
         </View>
+        
         <ThemedText style={[styles.cardSubtitle, {
           color: colorScheme === 'light' ? Colors.light.textSecondary : 'rgba(255,255,255,0.7)'
-        }]}>{alert.timestamp} • {alert.location}</ThemedText>
+        }]}>{alert.timestamp}</ThemedText>
         
-        <View style={[styles.dataRowColumn, {
-          borderBottomColor: colorScheme === 'light' ? Colors.light.cardBorder : 'rgba(255,255,255,0.1)'
-        }]}>
-          <ThemedText style={[styles.dataLabel, {
-            color: colorScheme === 'light' ? Colors.light.textSecondary : 'rgba(255,255,255,0.8)'
-          }]}>Location</ThemedText>
-          <ThemedText style={[styles.dataValueWrapped, {
-            color: colorScheme === 'light' ? Colors.light.text : '#ffffff'
-          }]} numberOfLines={2}>{alert.location}</ThemedText>
-        </View>
-        <View style={[styles.dataRow, {
-          borderBottomWidth: 0,
-          borderBottomColor: colorScheme === 'light' ? Colors.light.cardBorder : 'rgba(255,255,255,0.1)'
-        }]}>
-          <ThemedText style={[styles.dataLabel, {
-            color: colorScheme === 'light' ? Colors.light.textSecondary : 'rgba(255,255,255,0.8)'
-          }]}>Message</ThemedText>
+        <View style={styles.contentSection}>
+          <View style={[styles.dataRowColumn, {
+            borderBottomColor: colorScheme === 'light' ? '#9ca3af' : '#374151'
+          }]}>
+            <ThemedText style={[styles.dataLabel, {
+              color: colorScheme === 'light' ? Colors.light.textSecondary : 'rgba(255,255,255,0.8)'
+            }]}>Location</ThemedText>
+            <ThemedText style={[styles.dataValueWrapped, {
+              color: colorScheme === 'light' ? Colors.light.text : '#ffffff'
+            }]} numberOfLines={2}>{alert.location}</ThemedText>
+          </View>
+          
+          <View style={styles.messageSection}>
+            <ThemedText style={[styles.dataLabel, {
+              color: colorScheme === 'light' ? Colors.light.textSecondary : 'rgba(255,255,255,0.8)'
+            }]}>Message</ThemedText>
+            <ThemedText style={[styles.alertMessage, {
+              color: colorScheme === 'light' ? Colors.light.text : 'rgba(255, 255, 255, 0.85)'
+            }]}>{alert.message}</ThemedText>
+          </View>
         </View>
         
-        <ThemedText style={[styles.alertMessage, {
-          color: colorScheme === 'light' ? Colors.light.text : 'rgba(255, 255, 255, 0.85)'
-        }]}>{alert.message}</ThemedText>
+        <View style={[styles.actionSection, {
+          borderTopColor: colorScheme === 'light' ? '#9ca3af' : '#374151'
+        }]}>
+          <TouchableOpacity 
+            style={[styles.deepDiveButton, {
+              backgroundColor: colorScheme === 'light' ? Colors.light.primary : '#3b82f6',
+              borderColor: colorScheme === 'light' ? Colors.light.primary : '#3b82f6'
+            }]}
+            onPress={() => console.log(`Deep dive for alert: ${alert.id}`)}
+            activeOpacity={0.8}
+          >
+            <ThemedText style={styles.deepDiveText}>Deep Dive</ThemedText>
+          </TouchableOpacity>
+        </View>
       </ThemedView>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -282,13 +231,13 @@ const styles = StyleSheet.create({
   card: {
     // Dynamic styling applied inline based on theme
     borderRadius: 20,
-    padding: 20,
+    padding: 24,
     borderWidth: 1,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 16,
     minHeight: 40,
   },
   titleContainer: {
@@ -306,7 +255,19 @@ const styles = StyleSheet.create({
   cardSubtitle: {
     fontSize: 14,
     // color now set dynamically
+    marginBottom: 16,
+  },
+  contentSection: {
     marginBottom: 20,
+  },
+  messageSection: {
+    marginTop: 12,
+  },
+  actionSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    alignItems: 'flex-end',
   },
   dataRow: {
     flexDirection: 'row',
@@ -320,13 +281,15 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'flex-start',
     paddingVertical: 12,
+    paddingBottom: 16,
     borderBottomWidth: 1,
     // borderBottomColor now set dynamically
   },
   dataLabel: {
-    fontSize: 16,
+    fontSize: 14,
+    fontWeight: '500',
     // color now set dynamically
-    marginBottom: 4,
+    marginBottom: 6,
   },
   dataValue: {
     fontSize: 16,
@@ -359,6 +322,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     // color now set dynamically
     lineHeight: 20,
-    marginTop: 12,
+    marginTop: 8,
+  },
+  deepDiveButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    minWidth: 100,
+    alignItems: 'center',
+  },
+  deepDiveText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ffffff',
   },
 });

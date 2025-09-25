@@ -263,8 +263,8 @@ export default function MapScreen() {
         initialRegion={{
           latitude: 20.5937, // Center of India
           longitude: 78.9629,
-          latitudeDelta: 25, // Covers from Kashmir to Tamil Nadu
-          longitudeDelta: 25, // Covers from Gujarat to Arunachal Pradesh
+          latitudeDelta: 28, // Increased to cover from Kashmir to Kanyakumari
+          longitudeDelta: 30, // Increased to cover from Gujarat to Northeast states
         }}
         showsUserLocation={true}
         showsMyLocationButton={true}

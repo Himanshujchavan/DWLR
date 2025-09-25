@@ -4,39 +4,12 @@ import { StyleSheet, Text, View } from 'react-native';
 const stationData = [
   {
     id: 'DWLR001',
-    name: 'Pune Central Station',
-    currentLevel: 12.5,
-    previousLevel: 12.8,
-    trend: 'up',
-    status: 'safe',
-    lastReading: '10:30 AM'
-  },
-  {
-    id: 'DWLR002',
     name: 'Mumbai Suburban',
     currentLevel: 8.9,
     previousLevel: 9.2,
     trend: 'down',
     status: 'critical',
     lastReading: '10:15 AM'
-  },
-  {
-    id: 'DWLR003',
-    name: 'Nashik Agricultural',
-    currentLevel: 15.2,
-    previousLevel: 15.2,
-    trend: 'stable',
-    status: 'safe',
-    lastReading: '10:45 AM'
-  },
-  {
-    id: 'DWLR004',
-    name: 'Aurangabad Industrial',
-    currentLevel: 18.7,
-    previousLevel: 18.1,
-    trend: 'down',
-    status: 'semi-critical',
-    lastReading: '10:20 AM'
   }
 ];
 

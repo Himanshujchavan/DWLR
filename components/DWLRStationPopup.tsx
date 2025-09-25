@@ -2,25 +2,21 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import BottomSheet from "@gorhom/bottom-sheet";
 import {
-  Activity,
-  BarChart3,
-  Battery,
-  CloudRain,
   Droplets,
   Info,
-  Layers,
   MapPin,
-  Mountain,
   TrendingDown,
   TrendingUp
 } from 'lucide-react-native';
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View
 } from "react-native";
+import DWLRStationDetailsModal from './DWLRStationDetailsModal';
 
 // Helper function to generate realistic station data
 const makeStation = (
@@ -271,6 +267,9 @@ const DWLRStationPopup = forwardRef<DWLRStationPopupRef, Props>(({
   // Ensure we always have a valid station object even if null is passed in
   const stationData = propStationData ?? mockStationData;
   
+  // State for details modal
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  
   // Debug logging
   console.log('🔍 DWLRStationPopup render:', { 
     hasStationData: !!propStationData, 
@@ -340,22 +339,27 @@ const DWLRStationPopup = forwardRef<DWLRStationPopupRef, Props>(({
               {stationData?.name}
             </Text>
             <View style={styles.locationRow}>
-              <MapPin size={14} color={colors.textSecondary} />
+              <MapPin size={12} color={colors.textSecondary} />
               <Text style={[styles.location, { color: colors.textSecondary }]}>
                 {stationData?.location}
               </Text>
             </View>
+          </View>
+          
+          <View style={styles.headerRightInfo}>
+            <Text style={[styles.lastUpdatedTop, { color: colors.textMuted }]}>
+              Last updated: {stationData.groundwater.lastUpdated}
+            </Text>
           </View>
         </View>
         
         {/* Key Metrics Row */}
         <View style={styles.metricsRow}>
           <View style={[styles.metricCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.metricTitle, { color: colors.textSecondary }]}>Current Level</Text>
+            <Text style={[styles.metricTitle, { color: colors.textSecondary }]} numberOfLines={1}>Current Level</Text>
             <Text style={[styles.metricValue, { color: colors.primary }]}>
               {stationData.groundwater.currentLevel}m
             </Text>
-            <Text style={[styles.metricSubtitle, { color: colors.textMuted }]}>BGL</Text>
           </View>
           
           <View style={[styles.metricCard, { backgroundColor: colors.surface }]}>
@@ -363,24 +367,19 @@ const DWLRStationPopup = forwardRef<DWLRStationPopupRef, Props>(({
             <Text style={[styles.metricValue, { color: colors.text }]}>
               {stationData.groundwater.staticWaterLevel}m
             </Text>
-            <Text style={[styles.metricSubtitle, { color: colors.textMuted }]}>Static</Text>
           </View>
           
           <View style={[styles.metricCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.metricTitle, { color: colors.textSecondary }]}>Change</Text>
+            <Text style={[styles.metricTitle, { color: colors.textSecondary }]} numberOfLines={1}>Change</Text>
             <View style={styles.trendContainer}>
-              <TrendIcon size={16} color={trendColor} />
-              <Text style={[styles.metricValue, { color: trendColor, fontSize: 16 }]}>
+              <TrendIcon size={14} color={trendColor} />
+              <Text style={[styles.metricValue, { color: trendColor, fontSize: 15 }]}>
                 {Math.abs(stationData.groundwater.weeklyChange)}m
               </Text>
             </View>
             <Text style={[styles.metricSubtitle, { color: colors.textMuted }]}>This Week</Text>
           </View>
         </View>
-        
-        <Text style={[styles.lastUpdated, { color: colors.textMuted }]}>
-          Last updated: {stationData.groundwater.lastUpdated}
-        </Text>
       </View>
     );
   };
@@ -468,132 +467,27 @@ const DWLRStationPopup = forwardRef<DWLRStationPopupRef, Props>(({
             >
               {/* DWLR Details */}
               {renderDataCard('DWLR Details', Droplets, colors.primary, 
-                renderDataGrid([
-                  { label: 'Rainfall (Month)', value: `${stationData.rainfall.thisMonth}`, unit: 'mm', highlight: true },
-                  { label: 'Aquifer Type', value: stationData.aquifer.type },
-                  { label: 'Recharge Rate', value: stationData.recharge.estimatedRate, highlight: true },
-                  { label: 'Soil Type', value: stationData.soil.type },
-                ])
-              )}
-
-              {/* Aquifer Information */}
-              {renderDataCard('Aquifer Information', Layers, '#8b5cf6', 
-                renderDataGrid([
-                  { label: 'Type', value: stationData.aquifer.type },
-                  { label: 'Thickness', value: `${stationData.aquifer.thickness}`, unit: 'm' },
-                  { label: 'Permeability', value: stationData.aquifer.permeability },
-                  { label: 'Yield Capacity', value: stationData.aquifer.yieldCapacity, highlight: true },
-                  { label: 'Transmissivity', value: stationData.aquifer.transmissivity },
-                  { label: 'Quality Index', value: stationData.aquifer.qualityIndex, highlight: true },
-                ])
-              )}
-
-              {/* Environmental Data */}
-              <View style={styles.environmentalSection}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>Environmental Conditions</Text>
-                
-                <View style={styles.environmentalCards}>
-                  {/* Soil Properties - Compact */}
-                  <View style={[styles.compactCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                    <View style={styles.compactHeader}>
-                      <Mountain size={16} color="#a855f7" />
-                      <Text style={[styles.compactTitle, { color: colors.text }]}>Soil Properties</Text>
-                    </View>
-                    {renderDataGrid([
-                      { label: 'Type', value: stationData.soil.type },
-                      { label: 'Porosity', value: stationData.soil.porosity },
-                      { label: 'pH Level', value: stationData.soil.pH.toString(), highlight: true },
-                      { label: 'Infiltration', value: stationData.soil.infiltrationRate, highlight: true },
-                    ])}
-                  </View>
-
-                  {/* Rainfall Data - Compact */}
-                  <View style={[styles.compactCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                    <View style={styles.compactHeader}>
-                      <CloudRain size={16} color="#06b6d4" />
-                      <Text style={[styles.compactTitle, { color: colors.text }]}>Rainfall Data</Text>
-                    </View>
-                    {renderDataGrid([
-                      { label: 'Today', value: `${stationData.rainfall.today}`, unit: 'mm' },
-                      { label: 'This Week', value: `${stationData.rainfall.thisWeek}`, unit: 'mm' },
-                      { label: 'This Month', value: `${stationData.rainfall.thisMonth}`, unit: 'mm', highlight: true },
-                      { label: 'Seasonal', value: `${stationData.rainfall.seasonal}`, unit: 'mm', highlight: true },
-                    ])}
-                  </View>
-                </View>
-              </View>
-
-              {/* Recharge Information */}
-              {renderDataCard('Recharge Information', Activity, '#10b981', (
                 <View>
                   {renderDataGrid([
-                    { label: 'Estimated Rate', value: stationData.recharge.estimatedRate, highlight: true },
-                    { label: 'Efficiency', value: stationData.recharge.efficiency },
-                    { label: 'Recharge Index', value: stationData.recharge.rechargeIndex, highlight: true },
-                    { label: 'Potential Zone', value: stationData.recharge.potentialZone },
+                    { label: 'Rainfall (Month)', value: `${stationData.rainfall.thisMonth}`, unit: 'mm', highlight: true },
+                    { label: 'Aquifer Type', value: stationData.aquifer.type },
+                    { label: 'Recharge Rate', value: stationData.recharge.estimatedRate, highlight: true },
+                    { label: 'Soil Type', value: stationData.soil.type },
                   ])}
                   
-                  <View style={[styles.separator, { backgroundColor: colors.border }]} />
-                  <Text style={[styles.sourcesTitle, { color: colors.text }]}>
-                    Contributing Sources:
-                  </Text>
-                  <View style={styles.sourcesList}>
-                    {stationData?.recharge?.contributingSources?.map((source, index) => (
-                      <View key={index} style={[styles.sourceTag, { 
-                        backgroundColor: colors.primary + '15',
-                        borderColor: colors.primary + '30'
-                      }]}>
-                        <Text style={[styles.sourceText, { color: colors.primary }]}>
-                          {source}
-                        </Text>
-                      </View>
-                    ))}
+                  {/* See More Details Button integrated within DWLR Details */}
+                  <View style={styles.seeMoreIntegratedContainer}>
+                    <TouchableOpacity 
+                      style={[styles.seeMoreButton, { backgroundColor: colors.primary }]}
+                      activeOpacity={0.7}
+                      onPress={() => setShowDetailsModal(true)}
+                    >
+                      <Info size={16} color="#ffffff" />
+                      <Text style={styles.seeMoreText}>See More Details</Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
-              ))}
-
-              {/* System Status */}
-              {renderDataCard('System Status', BarChart3, '#f59e0b', (
-                <View>
-                  <View style={styles.systemMetrics}>
-                    <View style={styles.metricItem}>
-                      <Battery size={16} color={colors.success} />
-                      <Text style={[styles.metricText, { color: colors.text }]}>
-                        Battery: {stationData?.system?.batteryLevel ?? '--'}%
-                      </Text>
-                    </View>
-                    <View style={styles.metricItem}>
-                      <Activity size={16} color={colors.primary} />
-                      <Text style={[styles.metricText, { color: colors.text }]}>
-                        Signal: {stationData?.system?.signalStrength ?? '--'}%
-                      </Text>
-                    </View>
-                  </View>
-                  
-                  {renderDataGrid([
-                    { label: 'Data Quality', value: stationData.system.dataQuality, highlight: true },
-                    { label: 'Last Maintenance', value: stationData.system.lastMaintenance },
-                  ])}
-                  
-                  {stationData?.system?.alerts?.length > 0 && (
-                    <View style={styles.alertsSection}>
-                      <Text style={[styles.alertsTitle, { color: colors.warning }]}>
-                        System Alerts
-                      </Text>
-                      {stationData.system.alerts.map((alert, index) => (
-                        <View key={index} style={[styles.alertItem, { 
-                          backgroundColor: colors.warning + '15' 
-                        }]}>
-                          <Info size={16} color={colors.warning} />
-                          <Text style={[styles.alertText, { color: colors.text }]}>
-                            {alert}
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                </View>
-              ))}
+              )}
 
               {/* Bottom padding for scroll */}
               <View style={{ height: 80 }} />
@@ -606,6 +500,14 @@ const DWLRStationPopup = forwardRef<DWLRStationPopupRef, Props>(({
             </Text>
           </View>
         )}
+        
+        {/* Details Modal */}
+        <DWLRStationDetailsModal
+          visible={showDetailsModal}
+          stationData={propStationData}
+          onClose={() => setShowDetailsModal(false)}
+          variant={variant}
+        />
       </View>
     </BottomSheet>
   );
@@ -629,6 +531,11 @@ const styles = StyleSheet.create({
   stationInfo: {
     flex: 1,
     paddingRight: 12,
+  },
+  headerRightInfo: {
+    alignItems: 'flex-end',
+    justifyContent: 'flex-start',
+    paddingLeft: 8,
   },
   stationName: {
     fontSize: 20,
@@ -689,8 +596,15 @@ const styles = StyleSheet.create({
   lastUpdated: {
     fontSize: 12,
     lineHeight: 16,
-    textAlign: 'center',
+    textAlign: 'right',
     paddingHorizontal: 4,
+    marginTop: 8,
+  },
+  lastUpdatedTop: {
+    fontSize: 11,
+    lineHeight: 14,
+    textAlign: 'right',
+    fontWeight: '500',
   },
   scrollView: {
     flex: 1,
@@ -732,7 +646,7 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     gap: 8,
-    paddingBottom: 4,
+    paddingBottom: 8,
   },
   
   // Data grid styles
@@ -864,6 +778,39 @@ const styles = StyleSheet.create({
   placeholderText: {
     fontSize: 16,
     fontWeight: '500',
+    textAlign: 'center',
+  },
+  seeMoreContainer: {
+    marginTop: 8,
+    marginBottom: 8,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  seeMoreIntegratedContainer: {
+    marginTop: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+    alignItems: 'center',
+  },
+  seeMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    gap: 6,
+    minWidth: 140,
+    minHeight: 40,
+  },
+  seeMoreText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
     textAlign: 'center',
   },
 });
