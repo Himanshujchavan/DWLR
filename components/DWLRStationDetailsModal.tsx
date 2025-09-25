@@ -313,7 +313,7 @@ const DWLRStationDetailsModal: React.FC<Props> = ({
                           }
                         }
                       ]
-                    );
+                );
                   }}
                   activeOpacity={0.8}
                 >
