@@ -96,7 +96,7 @@ const RechargeAvailabilityCard: React.FC = () => {
           <View style={[styles.iconContainer, { backgroundColor: colors.iconBackground }]}>
             <MaterialCommunityIcons name="water-plus" size={24} color={colors.primary} />
           </View>
-          <ThemedText style={[styles.cardTitle, { color: colors.text }]}>Recharge </ThemedText>
+          <ThemedText style={[styles.cardTitle, { color: colors.text }]}>Recharge Patterns </ThemedText>
         </View>
         <ThemedText style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
           Last {rechargeData.length} days recharge data
